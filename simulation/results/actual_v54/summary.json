@@ -1,0 +1,36 @@
+{
+  "version": 54,
+  "validation_type": "actual_starcraft_match",
+  "opponent": "Pluto v2.0 md09b_1331000",
+  "opponent_opening": "2Gate",
+  "result": "LOSS",
+  "construction_events": 72,
+  "last_construction_frame": 15816,
+  "last_construction_seconds": 988,
+  "natural_command_center": {
+    "accepted_seconds": 541,
+    "started_seconds": 580,
+    "destroyed_seconds": 584,
+    "survival_seconds": 4
+  },
+  "input_sha256": {
+    "AI_v54_construction.csv": "c223dc05063a6e987b34a3454f170dec1990394cbfb75bdd00303505f3742a60",
+    "pluto_infer.log": "23bc435148992d56a77164cdbea1a21fdab0de64680bc984662d7849f82a55c6",
+    "pluto.log": "9bba8881fade231b9df2577ae43801716f2564f4613cfa79c8034a62e4ffed71",
+    "STARTcraft_vs_Pluto.rep": "498386e039c4596ddf3dc84bfa8ce32e4a3b4c4c8d9b585047c0b5a3d1d83889"
+  },
+  "observed_failures": [
+    "Protoss mobile production continued far beyond the useful Marine screen.",
+    "The home-threat rule reacted to non-combat air scouts and isolated contacts.",
+    "Repeated staging ticks moved additional Marines instead of counting units already posted.",
+    "The natural was approved by global unit counts without requiring Tanks at the expansion.",
+    "The natural Command Center died four seconds after its foundation started."
+  ],
+  "v55_actions": [
+    "Cap one-base TvP Marines at 10 or 12 and spend the remainder on mech.",
+    "Ignore Observers and isolated distant contacts for global base recall.",
+    "Count Marines already at the defense line before issuing more staging orders.",
+    "Require two Tanks physically posted and sieged at the natural before expansion.",
+    "Maintain two Vultures, research Spider Mines after Siege Mode, and mine the approach."
+  ]
+}

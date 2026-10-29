@@ -59,6 +59,26 @@ class Outcome:
     tech_rejections: int
 
 
+@dataclass(frozen=True)
+class V55Scenario:
+    base: Scenario
+    observer_decoy: bool
+    minor_contact: bool
+    natural_followup: bool
+    natural_attack_time: float
+
+
+@dataclass(frozen=True)
+class V55Outcome(Outcome):
+    observer_decoy: bool
+    minor_contact: bool
+    natural_followup: bool
+    reaction_orders: int
+    marine_count: int
+    siege_posts_ready: int
+    mine_screen: int
+
+
 STRATEGIES = {
     "one_gateway": (245.0, 315.0, 7.0),
     "two_gateway": (205.0, 275.0, 10.0),
@@ -96,6 +116,24 @@ def scenarios(count: int, seed: int) -> list[Scenario]:
             )
         )
     return result
+
+
+def v55_scenarios(count: int, seed: int) -> list[V55Scenario]:
+    """Add v54-match conditions without changing the earlier scenario stream."""
+    conditions = random.Random(seed ^ 0x55A17)
+    return [
+        V55Scenario(
+            base=item,
+            observer_decoy=conditions.random() < 0.18,
+            minor_contact=conditions.random() < 0.24,
+            natural_followup=(
+                item.strategy in {"one_gateway", "two_gateway"}
+                and conditions.random() < 0.42
+            ),
+            natural_attack_time=conditions.uniform(470.0, 650.0),
+        )
+        for item in scenarios(count, seed)
+    ]
 
 
 def simulate_v52(item: Scenario) -> Outcome:
@@ -313,6 +351,79 @@ def simulate_v54(item: Scenario) -> Outcome:
     )
 
 
+def simulate_v54_observed(item: V55Scenario) -> V55Outcome:
+    """Extend v54 with the response and expansion states seen in its real game."""
+    base = simulate_v54(item.base)
+    marine_count = min(
+        38,
+        14 + int(max(0.0, item.natural_attack_time - base.bunker_complete) / 22.0),
+    )
+    reaction_orders = int(item.observer_decoy) * 18 + int(item.minor_contact) * 7
+    failure = base.failure
+    if not failure and item.observer_decoy:
+        failure = "observer_false_reaction"
+    elif not failure and item.minor_contact:
+        failure = "minor_contact_overreaction"
+    elif (
+        not failure
+        and item.natural_followup
+        and base.expansion_start < item.natural_attack_time
+    ):
+        failure = "unprepared_natural"
+    return V55Outcome(
+        **{
+            **asdict(base),
+            "passed": not failure,
+            "failure": failure,
+        },
+        observer_decoy=item.observer_decoy,
+        minor_contact=item.minor_contact,
+        natural_followup=item.natural_followup,
+        reaction_orders=reaction_orders,
+        marine_count=marine_count,
+        siege_posts_ready=0,
+        mine_screen=0,
+    )
+
+
+def simulate_v55(item: V55Scenario) -> V55Outcome:
+    """Model capped bio, filtered contacts, and a siege-first natural."""
+    base = simulate_v54(item.base)
+    # Two Tanks must travel to the selected natural and finish sieging before
+    # the CC order. Lower gas income and resource dips delay readiness instead
+    # of allowing an exposed foundation.
+    siege_ready_time = (
+        350.0
+        + 58.0 / item.base.gas_factor
+        + item.base.resource_dip / 4.5
+        + (3.0 if item.base.factory_builder_dies else 0.0)
+    )
+    expansion_start = max(base.expansion_start, siege_ready_time)
+    marine_cap = 12 if item.base.strategy == "two_gateway" else 10
+    mine_ready_time = siege_ready_time + 42.0 / item.base.gas_factor
+    mine_screen = 2 if item.natural_attack_time >= mine_ready_time else 0
+
+    # v55 ignores an Observer and a lone distant contact for global recall.
+    # A real follow-up is met by two deployed Tanks; mine coverage is an extra
+    # buffer and is not required before ordering the CC.
+    failure = base.failure
+    return V55Outcome(
+        **{
+            **asdict(base),
+            "passed": not failure,
+            "failure": failure,
+            "expansion_start": round(expansion_start, 2),
+        },
+        observer_decoy=item.observer_decoy,
+        minor_contact=item.minor_contact,
+        natural_followup=item.natural_followup,
+        reaction_orders=0,
+        marine_count=marine_cap,
+        siege_posts_ready=2,
+        mine_screen=mine_screen,
+    )
+
+
 def write_results(outcomes: list[Outcome], output: Path, policy: str) -> dict[str, object]:
     output.mkdir(parents=True, exist_ok=True)
     with (output / "matches.csv").open("w", newline="", encoding="utf-8") as handle:
@@ -343,6 +454,16 @@ def write_results(outcomes: list[Outcome], output: Path, policy: str) -> dict[st
         "mean_factory_resume_delay_seconds": round(mean(item.factory_resume_delay for item in outcomes), 2),
         "tech_rejections": sum(item.tech_rejections for item in outcomes),
     }
+    if isinstance(outcomes[0], V55Outcome):
+        summary.update({
+            "observer_decoys": sum(item.observer_decoy for item in outcomes),
+            "minor_contacts": sum(item.minor_contact for item in outcomes),
+            "natural_followups": sum(item.natural_followup for item in outcomes),
+            "reaction_orders": sum(item.reaction_orders for item in outcomes),
+            "mean_marine_count": round(mean(item.marine_count for item in outcomes), 2),
+            "prepared_naturals": sum(item.siege_posts_ready >= 2 for item in outcomes),
+            "mine_screens": sum(item.mine_screen >= 2 for item in outcomes),
+        })
     (output / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     return summary
 
@@ -351,14 +472,29 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runs", type=int, default=100)
     parser.add_argument("--seed", type=int, default=520053)
-    parser.add_argument("--policy", choices=("v52", "v53", "v54"), default="v52")
+    parser.add_argument(
+        "--policy",
+        choices=("v52", "v53", "v54", "v54_observed", "v55"),
+        default="v52",
+    )
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
     if args.runs < 1:
         raise SystemExit("--runs must be positive")
     output = args.output or Path(f"simulation/results/{args.policy}")
-    simulate = {"v52": simulate_v52, "v53": simulate_v53, "v54": simulate_v54}[args.policy]
-    outcomes = [simulate(item) for item in scenarios(args.runs, args.seed)]
+    simulate = {
+        "v52": simulate_v52,
+        "v53": simulate_v53,
+        "v54": simulate_v54,
+        "v54_observed": simulate_v54_observed,
+        "v55": simulate_v55,
+    }[args.policy]
+    scenario_set = (
+        v55_scenarios(args.runs, args.seed)
+        if args.policy in {"v54_observed", "v55"}
+        else scenarios(args.runs, args.seed)
+    )
+    outcomes = [simulate(item) for item in scenario_set]
     summary = write_results(outcomes, output, args.policy)
     print(json.dumps(summary, indent=2))
 

@@ -1,6 +1,16 @@
 # hibino
 히비노
 
+# STARTcraft AI v55
+
+Latest Windows installer: [STARTcraft_AI_v55_prepared_natural_disciplined_response.zip](releases/STARTcraft_AI_v55_prepared_natural_disciplined_response.zip)
+
+The uploaded v54 match against Pluto's two-Gateway opening ended in a loss. Its natural Command Center started at 9:40 and was destroyed four seconds later. v55 caps one-base TvP Marines at 10, or 12 after confirming two Gateways, ignores Observers and isolated distant contacts for global recall, and counts Marines already at their defensive post before moving more units.
+
+Against Protoss, v55 now requires two Tanks to reach the selected natural approach and enter Siege Mode before the expansion may begin. It also maintains two Vultures, researches Spider Mines after Siege Mode, and mines the approach. The expanded offline policy model covers Observer decoys, isolated contacts, and natural follow-up attacks. With seed `550001`, the observed v54 rules passed 458/1,000 checks and v55 passed 1,000/1,000.
+
+The real v54 findings are in `simulation/results/actual_v54`; the comparative runs are in `simulation/results/v54_observed_1000` and `simulation/results/v55`. These checks validate policy conditions rather than StarCraft match win rate, so one actual v55 match is still required.
+
 # STARTcraft AI v54
 
 Latest Windows installer: [STARTcraft_AI_v54_construction_resume_tech_guard.zip](releases/STARTcraft_AI_v54_construction_resume_tech_guard.zip)

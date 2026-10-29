@@ -1,0 +1,39 @@
+{
+  "policy": "v54_observed",
+  "runs": 1000,
+  "passed": 458,
+  "failed": 542,
+  "failures": {
+    "minor_contact_overreaction": 197,
+    "observer_false_reaction": 174,
+    "unprepared_natural": 171
+  },
+  "strategies": {
+    "two_gateway": {
+      "runs": 289,
+      "passed": 105
+    },
+    "tech": {
+      "runs": 210,
+      "passed": 136
+    },
+    "one_gateway": {
+      "runs": 311,
+      "passed": 106
+    },
+    "fast_nexus": {
+      "runs": 190,
+      "passed": 111
+    }
+  },
+  "mean_bunker_complete_seconds": 177.89,
+  "mean_factory_resume_delay_seconds": 0.6,
+  "tech_rejections": 0,
+  "observer_decoys": 174,
+  "minor_contacts": 237,
+  "natural_followups": 269,
+  "reaction_orders": 4791,
+  "mean_marine_count": 30.89,
+  "prepared_naturals": 0,
+  "mine_screens": 0
+}
