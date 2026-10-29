@@ -1,6 +1,12 @@
 # hibino
 히비노
 
+# STARTcraft AI v52
+
+Latest Windows installer: [STARTcraft_AI_v52_path_bunker_auto_benchmark.zip](releases/STARTcraft_AI_v52_path_bunker_auto_benchmark.zip)
+
+v52 places the main bunker beside the detected ground path and choke. The package also includes a five-match automatic runner that collects all results into one ZIP.
+
 # STARTcraft AI v51
 
 Latest Windows installer: [STARTcraft_AI_v51_resilient_construction_protoss_hold.zip](releases/STARTcraft_AI_v51_resilient_construction_protoss_hold.zip)
