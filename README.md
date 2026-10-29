@@ -1,6 +1,14 @@
 # hibino
 히비노
 
+# STARTcraft AI v53
+
+Latest Windows installer: [STARTcraft_AI_v53_resilient_ground_path_defense.zip](releases/STARTcraft_AI_v53_resilient_ground_path_defense.zip)
+
+v53 hands an interrupted build to a replacement SCV, projects main and natural bunkers from traversable ground paths, prepares the Protoss entrance defense earlier, and holds pressured expansions until the defense is ready.
+
+The deterministic offline stress model is in `simulation/offline_v52.py`. With seed `520053`, the v52 policy passed 36/100 scenarios and the corrected v53 policy passed 100/100. The model covers one-Gateway, two-Gateway, fast-Nexus, and tech openings while varying construction delay, builder death, mineral/gas income, and bunker distance from the ground route.
+
 # STARTcraft AI v52
 
 Latest Windows installer: [STARTcraft_AI_v52_path_bunker_auto_benchmark.zip](releases/STARTcraft_AI_v52_path_bunker_auto_benchmark.zip)

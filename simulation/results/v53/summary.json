@@ -1,0 +1,26 @@
+{
+  "policy": "v53",
+  "runs": 100,
+  "passed": 100,
+  "failed": 0,
+  "failures": {},
+  "strategies": {
+    "two_gateway": {
+      "runs": 30,
+      "passed": 30
+    },
+    "one_gateway": {
+      "runs": 33,
+      "passed": 33
+    },
+    "fast_nexus": {
+      "runs": 17,
+      "passed": 17
+    },
+    "tech": {
+      "runs": 20,
+      "passed": 20
+    }
+  },
+  "mean_bunker_complete_seconds": 179.27
+}
