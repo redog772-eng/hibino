@@ -1,0 +1,41 @@
+{
+  "policy": "v56",
+  "runs": 1000,
+  "passed": 1000,
+  "failed": 0,
+  "failures": {},
+  "strategies": {
+    "tech": {
+      "runs": 220,
+      "passed": 220
+    },
+    "fast_nexus": {
+      "runs": 210,
+      "passed": 210
+    },
+    "two_gateway": {
+      "runs": 299,
+      "passed": 299
+    },
+    "one_gateway": {
+      "runs": 271,
+      "passed": 271
+    }
+  },
+  "mean_bunker_complete_seconds": 178.29,
+  "mean_factory_resume_delay_seconds": 0.5,
+  "tech_rejections": 0,
+  "observer_decoys": 187,
+  "minor_contacts": 218,
+  "natural_followups": 227,
+  "reaction_orders": 0,
+  "mean_marine_count": 10.6,
+  "prepared_naturals": 1000,
+  "mine_screens": 964,
+  "retreating_baits": 367,
+  "storm_pressure_cases": 248,
+  "chase_orders": 0,
+  "minimum_sieged_cover": 1,
+  "maximum_tank_gap": 185.0,
+  "leapfrog_bounds": 4006
+}

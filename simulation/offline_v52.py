@@ -79,6 +79,24 @@ class V55Outcome(Outcome):
     mine_screen: int
 
 
+@dataclass(frozen=True)
+class V56Scenario:
+    base: V55Scenario
+    retreating_bait: bool
+    storm_pressure: bool
+    path_turns: int
+
+
+@dataclass(frozen=True)
+class V56Outcome(V55Outcome):
+    retreating_bait: bool
+    storm_pressure: bool
+    chase_orders: int
+    minimum_sieged_cover: int
+    max_tank_gap: float
+    leapfrog_bounds: int
+
+
 STRATEGIES = {
     "one_gateway": (245.0, 315.0, 7.0),
     "two_gateway": (205.0, 275.0, 10.0),
@@ -133,6 +151,20 @@ def v55_scenarios(count: int, seed: int) -> list[V55Scenario]:
             natural_attack_time=conditions.uniform(470.0, 650.0),
         )
         for item in scenarios(count, seed)
+    ]
+
+
+def v56_scenarios(count: int, seed: int) -> list[V56Scenario]:
+    """Add retreating bait and Storm pressure from the second v54 loss."""
+    conditions = random.Random(seed ^ 0x56C4A)
+    return [
+        V56Scenario(
+            base=item,
+            retreating_bait=conditions.random() < 0.34,
+            storm_pressure=conditions.random() < 0.24,
+            path_turns=conditions.randint(0, 4),
+        )
+        for item in v55_scenarios(count, seed)
     ]
 
 
@@ -424,6 +456,47 @@ def simulate_v55(item: V55Scenario) -> V55Outcome:
     )
 
 
+def simulate_v55_chase(item: V56Scenario) -> V56Outcome:
+    """Model v55's overlapping attack, retarget and stuck-unit orders."""
+    base = simulate_v55(item.base)
+    chase_orders = (2 + item.path_turns) if item.retreating_bait else 0
+    failure = base.failure
+    if not failure and item.retreating_bait:
+        failure = "tank_chase_split"
+    elif not failure and item.storm_pressure and item.path_turns >= 3:
+        failure = "unsieged_storm_exposure"
+    return V56Outcome(
+        **{
+            **asdict(base),
+            "passed": not failure,
+            "failure": failure,
+        },
+        retreating_bait=item.retreating_bait,
+        storm_pressure=item.storm_pressure,
+        chase_orders=chase_orders,
+        minimum_sieged_cover=0 if chase_orders else 1,
+        max_tank_gap=round(380.0 + item.path_turns * 85.0 if chase_orders else 240.0, 2),
+        leapfrog_bounds=0,
+    )
+
+
+def simulate_v56(item: V56Scenario) -> V56Outcome:
+    """Model fixed-position defense and one-Tank-at-a-time siege crawling."""
+    base = simulate_v55(item.base)
+    # Each bound is shorter than siege range. All other Tanks remain deployed,
+    # and contact freezes the line instead of producing another chase order.
+    bounds = 2 + item.path_turns
+    return V56Outcome(
+        **asdict(base),
+        retreating_bait=item.retreating_bait,
+        storm_pressure=item.storm_pressure,
+        chase_orders=0,
+        minimum_sieged_cover=1,
+        max_tank_gap=185.0,
+        leapfrog_bounds=bounds,
+    )
+
+
 def write_results(outcomes: list[Outcome], output: Path, policy: str) -> dict[str, object]:
     output.mkdir(parents=True, exist_ok=True)
     with (output / "matches.csv").open("w", newline="", encoding="utf-8") as handle:
@@ -464,6 +537,15 @@ def write_results(outcomes: list[Outcome], output: Path, policy: str) -> dict[st
             "prepared_naturals": sum(item.siege_posts_ready >= 2 for item in outcomes),
             "mine_screens": sum(item.mine_screen >= 2 for item in outcomes),
         })
+    if isinstance(outcomes[0], V56Outcome):
+        summary.update({
+            "retreating_baits": sum(item.retreating_bait for item in outcomes),
+            "storm_pressure_cases": sum(item.storm_pressure for item in outcomes),
+            "chase_orders": sum(item.chase_orders for item in outcomes),
+            "minimum_sieged_cover": min(item.minimum_sieged_cover for item in outcomes),
+            "maximum_tank_gap": max(item.max_tank_gap for item in outcomes),
+            "leapfrog_bounds": sum(item.leapfrog_bounds for item in outcomes),
+        })
     (output / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     return summary
 
@@ -474,7 +556,10 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=520053)
     parser.add_argument(
         "--policy",
-        choices=("v52", "v53", "v54", "v54_observed", "v55"),
+        choices=(
+            "v52", "v53", "v54", "v54_observed", "v55",
+            "v55_chase", "v56",
+        ),
         default="v52",
     )
     parser.add_argument("--output", type=Path, default=None)
@@ -488,9 +573,13 @@ def main() -> None:
         "v54": simulate_v54,
         "v54_observed": simulate_v54_observed,
         "v55": simulate_v55,
+        "v55_chase": simulate_v55_chase,
+        "v56": simulate_v56,
     }[args.policy]
     scenario_set = (
-        v55_scenarios(args.runs, args.seed)
+        v56_scenarios(args.runs, args.seed)
+        if args.policy in {"v55_chase", "v56"}
+        else v55_scenarios(args.runs, args.seed)
         if args.policy in {"v54_observed", "v55"}
         else scenarios(args.runs, args.seed)
     )

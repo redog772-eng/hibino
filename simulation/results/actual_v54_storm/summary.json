@@ -1,0 +1,31 @@
+{
+  "version": 54,
+  "validation_type": "actual_starcraft_match",
+  "opponent": "Pluto v2.0 md09b_1331000",
+  "opponent_opening": "Storm~tr",
+  "result": "LOSS",
+  "construction_log_sessions": 2,
+  "latest_session_construction_events": 58,
+  "latest_session_last_frame": 13366,
+  "latest_session_last_seconds": 835,
+  "latest_session_natural_command_center": false,
+  "input_sha256": {
+    "AI_v54_construction.csv": "042ab263ba188c555b78af7c49e8cabe9d41f4108ed75537e65a0a098c349f28",
+    "pluto_infer.log": "36b6eed8900ba87e16a1ad4882c7e983d5994deea8735140745ba5cbf842e982",
+    "pluto.log": "71a485eb19ecf1c9b616c93f2374879c0cde7f0a14d4cc128a951962ea029063",
+    "STARTcraft_vs_Pluto.rep": "c20183b6ab923bef24b3fba8333f5d1d996e267f7b44808e4ab226e663f98a41"
+  },
+  "observed_failures": [
+    "The uploaded construction report proves that this match ran AI v54 rather than v55.",
+    "The latest session never started a natural Command Center.",
+    "Overlapping attack, retarget, traffic and stuck-unit controllers could unsiege or redirect the same Tank.",
+    "Individual enemy contacts could pull mobile units beyond the Siege Tank line."
+  ],
+  "v56_actions": [
+    "Keep the natural garrison at fixed posts and make Marines hold instead of chasing.",
+    "Give non-garrison Tanks to one final siege-line controller.",
+    "Advance one rear Tank per bound while every other Tank remains sieged.",
+    "Freeze the line when detected ground combat units enter contact range.",
+    "Leash Marines, Medics and Vultures to the Tank line."
+  ]
+}

@@ -1,6 +1,16 @@
 # hibino
 히비노
 
+# STARTcraft AI v56
+
+Latest Windows installer: [STARTcraft_AI_v56_leapfrog_siege_no_chase.zip](releases/STARTcraft_AI_v56_leapfrog_siege_no_chase.zip)
+
+The newest uploaded match was another v54 run, not v55: the construction report contains version 54, Pluto selected `Storm~tr`, and Pluto won. v56 keeps the prepared-natural rules from v55 and gives each non-garrison Tank to one siege-line controller so attack, retarget, traffic, and stuck-unit code cannot pull individual Tanks away.
+
+At the natural, Marines hold their assigned posts and Tanks stay sieged behind the approach. During a push, one rear Tank advances at most 185 pixels while every other Tank remains deployed; detected ground contact freezes the next bound. Marines, Medics, and Vultures are leashed to the Tank line instead of chasing retreating units.
+
+The expanded offline model uses seed `560001` across 1,000 randomized cases, including retreating bait, Storm pressure, path turns, construction delays, worker deaths, Protoss openings, resources, bunker distance, Observers, and natural follow-ups. The v55 chase behavior passed 583/1,000 checks; v56 passed 1,000/1,000. The real-match evidence is in `simulation/results/actual_v54_storm`, with the comparison in `simulation/results/v55_chase_1000` and `simulation/results/v56_1000`. One actual v56 match is still required.
+
 # STARTcraft AI v55
 
 Latest Windows installer: [STARTcraft_AI_v55_prepared_natural_disciplined_response.zip](releases/STARTcraft_AI_v55_prepared_natural_disciplined_response.zip)
