@@ -3,7 +3,7 @@
 
 # STARTcraft AI v57
 
-[Windows installer](releases/STARTcraft_AI_v57_bunker_breach_defense.zip): extract and run `upgrade_ai_v57.cmd` with StarCraft and bots closed. Verified v54, v55 and v56 sources are accepted directly.
+[Windows installer v57.1](releases/STARTcraft_AI_v57_1_compile_fix.zip): extract and run `upgrade_ai_v57.cmd` with StarCraft and bots closed. Verified v54, v55, v56 and original v57 sources are accepted directly. v57.1 adds the missing forward declaration for `AIV25Seen`, fixing MSVC C3861 and its cascading C2737 error reported in the uploaded build log. The gameplay rules are unchanged.
 
 Ground attackers within 460 pixels of a Command Center trigger emergency SCV support. Empty or out-of-range bunkers no longer inflate local defender strength. Bunkers with no visible attacker in their firing range unload Marines to support the breached base, and loading is suppressed for 96 frames after the last breach observation. Emergency infantry orders execute after normal staging. Builders, repairers, gas workers and wounded SCVs remain protected; at least four local workers are retained from the pull quota. This is worker-based emergency defense, not a map-specific building wall.
 

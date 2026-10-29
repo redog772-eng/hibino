@@ -2548,6 +2548,8 @@ void AIV10ArmyController()
 #include <vector>
 namespace {
 int g_v11PrevFrame = -1;
+// Used by the production policy before the intelligence implementation below.
+static int AIV25Seen(BWAPI::UnitType kind);
 int g_v11LastBuildOrder = -10000;
 int g_v11LastExpandCheck = -10000;
 int g_v11LastNotice = -10000;

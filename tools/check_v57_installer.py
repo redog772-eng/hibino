@@ -2,7 +2,7 @@ import sys,zipfile,tempfile,base64,zlib
 from pathlib import Path
 sys.path.insert(0,'tools')
 from build_v53_release import assignment
-with zipfile.ZipFile('releases/STARTcraft_AI_v57_bunker_breach_defense.zip') as z:
+with zipfile.ZipFile('releases/STARTcraft_AI_v57_1_compile_fix.zip') as z:
  assert z.testzip() is None
  src=z.read('source/StarterBot.cpp');code=z.read('install_ai_v57.py').decode()
 ns={'__name__':'test'};exec(code,ns)
@@ -20,6 +20,7 @@ with tempfile.TemporaryDirectory() as d:
  except RuntimeError:pass
  else:raise AssertionError('unknown accepted')
  assert f.read_bytes()==b'unknown'
+ f.write_bytes(src);ns['main']();assert f.read_bytes()==src
 s=src.decode();body=s[s.index('void StarterBot::onFrame()'):s.index('void StarterBot::sendIdleWorkersToMinerals()')]
 assert body.count('AIV23ReactiveDefense();')==1
 assert body.index('AIV23ReactiveDefense();')>body.index('AIV26EarlyDefenseAndRecon();')

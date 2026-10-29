@@ -12,17 +12,19 @@ def main():
         installer = z.read('install_ai_v56.py').decode()
         command = z.read('upgrade_ai_v56.cmd').decode().replace('v56', 'v57')
     prior = assignment(installer, 'NEW_SHA256')
+    with zipfile.ZipFile('releases/STARTcraft_AI_v57_bunker_breach_defense.zip') as z:
+        original_v57 = assignment(z.read('install_ai_v57.py').decode(), 'NEW_SHA256')
     installer = installer.replace('v56', 'v57')
     installer = installer.replace('anchored natural and leapfrog siege line', 'bunker breach emergency defense')
     installer = installer.replace('current_sha not in (OLD_SHA256,NEW_SHA256,',
-                                  f'current_sha not in (OLD_SHA256,NEW_SHA256,{prior!r},')
+                                  f'current_sha not in (OLD_SHA256,NEW_SHA256,{prior!r},{original_v57!r},')
     installer = installer.replace('Expected exact v54, v55 or recoverable v57',
                                   'Expected exact v54, v55, v56 or recoverable v57')
     installer = replace_assignment(installer, 'SOURCE_B64', base64.b64encode(zlib.compress(source,9)).decode())
     installer = replace_assignment(installer, 'NEW_SHA256', hashlib.sha256(source).hexdigest())
     compile(installer, 'install_ai_v57.py', 'exec')
     assert zlib.decompress(base64.b64decode(assignment(installer,'SOURCE_B64')))==source
-    readme = '''STARTcraft AI v57 - 벙커 돌파 긴급 대응
+    readme = '''STARTcraft AI v57.1 - AIV25Seen 선언 누락 컴파일 오류 수정
 게임과 봇을 종료한 뒤 upgrade_ai_v57.cmd를 실행하세요.
 SUCCESS가 표시된 뒤 기존 run_STARTcraft_vs_Pluto.cmd로 한 경기 실행하세요.
 v54/v55/v56의 확인된 소스에서 직접 업데이트할 수 있습니다.
@@ -41,7 +43,7 @@ AI_reports/AI_v57_breach.csv 열: frame,cc_id,breached,ground_threat,defender_po
 이 환경에서는 Windows 컴파일과 실제 경기를 실행하지 못했습니다.
 오프라인 검사는 승률을 의미하지 않습니다.
 '''
-    path=Path('releases/STARTcraft_AI_v57_bunker_breach_defense.zip')
+    path=Path('releases/STARTcraft_AI_v57_1_compile_fix.zip')
     with zipfile.ZipFile(path,'w') as z:
         for name,data in [('source/StarterBot.cpp',source),('install_ai_v57.py',installer.encode()),('upgrade_ai_v57.cmd',command.encode()),('README_KO.txt',readme.encode())]:
             add_file(z,name,data)
