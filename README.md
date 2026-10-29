@@ -1,6 +1,16 @@
 # hibino
 히비노
 
+# STARTcraft AI v57
+
+[Windows installer](releases/STARTcraft_AI_v57_bunker_breach_defense.zip): extract and run `upgrade_ai_v57.cmd` with StarCraft and bots closed. Verified v54, v55 and v56 sources are accepted directly.
+
+Ground attackers within 460 pixels of a Command Center trigger emergency SCV support. Empty or out-of-range bunkers no longer inflate local defender strength. Bunkers with no visible attacker in their firing range unload Marines to support the breached base, and loading is suppressed for 96 frames after the last breach observation. Emergency infantry orders execute after normal staging. Builders, repairers, gas workers and wounded SCVs remain protected; at least four local workers are retained from the pull quota. This is worker-based emergency defense, not a map-specific building wall.
+
+The reviewed Pluto log reports `o:1GateCore` and a Pluto win. The attached CSV contains v54 sessions, but a stale CSV cannot establish the active executable version. Check `AI_v57_construction.csv` on the next run; `AI_v57_breach.csv` records emergency decisions. The replay has been retained as input but was not played back in this environment.
+
+Validation: installer checks accept v54-v57 and reject unknown sources without mutation; embedded source matches `source/StarterBot.cpp`; command-order regression checks pass. Windows/BWAPI compilation and actual match behavior remain unverified here. The existing v56 abstract model was rerun for 1,000 cases with seed 570001, but does not exercise this C++ change. Earlier fixed metrics such as 185-pixel gaps were model assumptions, not measured engine behavior or win rates.
+
 # STARTcraft AI v56
 
 Latest Windows installer: [STARTcraft_AI_v56_1_installer_fix.zip](releases/STARTcraft_AI_v56_1_installer_fix.zip)
