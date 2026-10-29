@@ -3,7 +3,9 @@
 
 # STARTcraft AI v56
 
-Latest Windows installer: [STARTcraft_AI_v56_leapfrog_siege_no_chase.zip](releases/STARTcraft_AI_v56_leapfrog_siege_no_chase.zip)
+Latest Windows installer: [STARTcraft_AI_v56_1_installer_fix.zip](releases/STARTcraft_AI_v56_1_installer_fix.zip)
+
+The v56.1 installer accepts the verified v54 and v55 sources as well as v56 for recovery. This fixes the rejected direct upgrade from v54; the v56 game source is unchanged. Unknown modified sources are still rejected without changing files.
 
 The newest uploaded match was another v54 run, not v55: the construction report contains version 54, Pluto selected `Storm~tr`, and Pluto won. v56 keeps the prepared-natural rules from v55 and gives each non-garrison Tank to one siege-line controller so attack, retarget, traffic, and stuck-unit code cannot pull individual Tanks away.
 

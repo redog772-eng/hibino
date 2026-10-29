@@ -63,18 +63,23 @@ pause
 
 
 def installer_from_v55(template: str, source: bytes) -> str:
+    v54_hash = assignment(template, "OLD_SHA256")
     old_hash = assignment(template, "NEW_SHA256")
     new_hash = hashlib.sha256(source).hexdigest()
     encoded = base64.b64encode(zlib.compress(source, level=9)).decode("ascii")
     result = replace_assignment(template, "SOURCE_B64", encoded)
     result = replace_assignment(result, "OLD_SHA256", old_hash)
     result = replace_assignment(result, "NEW_SHA256", new_hash)
+    guard = "current_sha not in (OLD_SHA256,NEW_SHA256)"
+    if template.count(guard) != 1:
+        raise ValueError("installer source guard not found exactly once")
+    result = result.replace(guard, f"current_sha not in (OLD_SHA256,NEW_SHA256,{v54_hash!r})")
     replacements = {
         ".v55tmp": ".v56tmp",
         "AI_v55_build.log": "AI_v56_build.log",
         "v55 source checksum failed": "v56 source checksum failed",
         "Expected exact v54 or recoverable v55 source":
-            "Expected exact v55 or recoverable v56 source",
+            "Expected exact v54, v55 or recoverable v56 source; keep your source for diagnosis",
         "before_v55_": "before_v56_",
         "BUILDING AI v55": "BUILDING AI v56",
         "AI v55: prepared natural and disciplined reaction":
