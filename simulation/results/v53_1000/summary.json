@@ -1,0 +1,31 @@
+{
+  "policy": "v53",
+  "runs": 1000,
+  "passed": 899,
+  "failed": 101,
+  "failures": {
+    "tech_command_spam": 98,
+    "insufficient_defense": 3
+  },
+  "strategies": {
+    "tech": {
+      "runs": 180,
+      "passed": 146
+    },
+    "two_gateway": {
+      "runs": 313,
+      "passed": 310
+    },
+    "one_gateway": {
+      "runs": 300,
+      "passed": 236
+    },
+    "fast_nexus": {
+      "runs": 207,
+      "passed": 207
+    }
+  },
+  "mean_bunker_complete_seconds": 178.29,
+  "mean_factory_resume_delay_seconds": 64.82,
+  "tech_rejections": 3676
+}

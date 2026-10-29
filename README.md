@@ -1,6 +1,16 @@
 # hibino
 히비노
 
+# STARTcraft AI v54
+
+Latest Windows installer: [STARTcraft_AI_v54_construction_resume_tech_guard.zip](releases/STARTcraft_AI_v54_construction_resume_tech_guard.zip)
+
+The uploaded v53 match against Pluto ended in a loss and exposed two concrete problems: a Factory remained unattended for 391 seconds after its SCV died, and the bot issued 41 Starport orders before the required tech was ready. v54 assigns a replacement SCV to unfinished Terran buildings, checks whether a tech building can be made before issuing its order, and stages a seventh Marine against a confirmed two-Gateway opening.
+
+The offline model now runs 1,000 randomized scenarios with seed `540001`. Under the same scenarios, v53 passed 899/1,000 and v54 passed 1,000/1,000. The final results are in `simulation/results/v53_1000` and `simulation/results/v54`; the uploaded real-match findings are in `simulation/results/actual_v53`.
+
+One new actual v54 match is still required to confirm the fixes in StarCraft. Install v54, run the existing `run_STARTcraft_vs_Pluto.cmd` once, and retain `AI_v54_construction.csv`, `pluto.log`, `pluto_infer.log`, and the replay.
+
 # STARTcraft AI v53
 
 Latest Windows installer: [STARTcraft_AI_v53_resilient_ground_path_defense.zip](releases/STARTcraft_AI_v53_resilient_ground_path_defense.zip)

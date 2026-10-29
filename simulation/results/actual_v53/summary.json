@@ -1,0 +1,34 @@
+{
+  "version": 53,
+  "validation_type": "actual_starcraft_match",
+  "opponent": "Pluto v2.0 md09b_1331000",
+  "opponent_opening": "1GateCore",
+  "result": "LOSS",
+  "last_logged_frame": 14700,
+  "last_logged_seconds": 918,
+  "construction_events": 91,
+  "first_factory": {
+    "accepted_seconds": 305,
+    "started_seconds": 316,
+    "builder_lost_seconds": 365,
+    "completed_seconds": 756,
+    "unattended_delay_seconds": 391
+  },
+  "starport_insufficient_tech_rejections": 41,
+  "first_bunker": {
+    "accepted_seconds": 225,
+    "started_seconds": 237,
+    "completed_seconds": 265
+  },
+  "input_sha256": {
+    "AI_v53_construction.csv": "773945265a0d300cc3932a52b5b561c7dde29f078a125030bb38cdd69b8e7ebe",
+    "pluto_infer.log": "a576077092ddf7eafbc84a9b718d185e40ee03a3240399d77282c60b545d2f27",
+    "pluto.log": "7899d24ba157e753fe39ef776ce429ec072e43841e3e889dcb67abdcacfc6b4d",
+    "STARTcraft_vs_Pluto.rep": "c04d57408487332c9adbb21b816b548c9de38502947817822c6ecf4638e89a03"
+  },
+  "v54_actions": [
+    "Assign a replacement SCV to an unfinished Terran building when its builder dies.",
+    "Check BWAPI canMake before issuing a tech-building command.",
+    "Stage one additional Marine against a confirmed two-Gateway opening."
+  ]
+}

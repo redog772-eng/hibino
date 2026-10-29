@@ -29,6 +29,7 @@ class Scenario:
     construction_delay: float
     builder_dies: bool
     builder_death_after_order: float
+    factory_builder_dies: bool
     mineral_factor: float
     gas_factor: float
     resource_dip: float
@@ -54,6 +55,8 @@ class Outcome:
     builder_dies: bool
     mineral_factor: float
     gas_factor: float
+    factory_resume_delay: float
+    tech_rejections: int
 
 
 STRATEGIES = {
@@ -83,6 +86,7 @@ def scenarios(count: int, seed: int) -> list[Scenario]:
                 construction_delay=rng.uniform(4.0, 62.0),
                 builder_dies=rng.random() < (0.27 if strategy == "two_gateway" else 0.15),
                 builder_death_after_order=rng.uniform(5.0, 38.0),
+                factory_builder_dies=rng.random() < 0.18,
                 mineral_factor=mineral_factor,
                 gas_factor=gas_factor,
                 resource_dip=rng.uniform(0.0, 85.0),
@@ -153,6 +157,8 @@ def simulate_v52(item: Scenario) -> Outcome:
         builder_dies=item.builder_dies,
         mineral_factor=round(item.mineral_factor, 3),
         gas_factor=round(item.gas_factor, 3),
+        factory_resume_delay=0.0,
+        tech_rejections=0,
     )
 
 
@@ -175,13 +181,96 @@ def simulate_v53(item: Scenario) -> Outcome:
         bunker_start += 3.0
     bunker_complete = bunker_start + 30.0
 
-    factory_complete = 180.0 + 42.0 / item.gas_factor + item.resource_dip / 6.5
+    # The first actual v53 game exposed a missing state: when the builder died
+    # after the foundation existed, the tracked task watched the building but
+    # never assigned another SCV. Model the observed multi-minute stall.
+    factory_resume_delay = 0.0
+    if item.factory_builder_dies:
+        factory_resume_delay = 260.0 + item.resource_dip * 1.55
+    factory_complete = (
+        180.0 + 42.0 / item.gas_factor + item.resource_dip / 6.5 + factory_resume_delay
+    )
     marine_power = max(2.0, (item.pressure_time - barracks_complete) / 25.0)
     tank_power = max(0.0, (item.pressure_time - factory_complete) / 48.0) * 2.2
     bunker_power = 5.0 if bunker_complete <= item.pressure_time else 0.0
     # v53 retains six nearby Marines and permits the existing emergency SCV
     # screen to count as temporary defense during Gateway pressure.
     pressure_screen = 3.5 if item.strategy in {"one_gateway", "two_gateway"} else 1.0
+    defense_power = marine_power + tank_power + bunker_power + pressure_screen
+
+    base_expand = max(218.0, factory_complete + 18.0) + 38.0 / item.mineral_factor
+    if item.strategy == "two_gateway":
+        expansion_start = max(base_expand, bunker_complete + 78.0)
+    elif item.strategy == "one_gateway":
+        expansion_start = max(base_expand, bunker_complete + 32.0)
+    else:
+        expansion_start = base_expand
+
+    tech_rejections = 0
+    if factory_resume_delay and item.strategy in {"one_gateway", "tech"}:
+        tech_rejections = 24 + int(item.resource_dip / 3.0)
+    failure = ""
+    exposed_expansion = expansion_start < item.pressure_time and bunker_complete > item.pressure_time
+    if not valid_path_pad:
+        failure = "no_path_safe_bunker_pad"
+    elif bunker_complete > item.pressure_time and item.strategy in {"one_gateway", "two_gateway"}:
+        failure = "bunker_late"
+    elif exposed_expansion and item.strategy in {"one_gateway", "tech"}:
+        failure = "unsafe_expansion"
+    elif defense_power < item.pressure_power:
+        failure = "insufficient_defense"
+    elif tech_rejections >= 20:
+        failure = "tech_command_spam"
+
+    return Outcome(
+        index=item.index,
+        strategy=item.strategy,
+        passed=not failure,
+        failure=failure,
+        bunker_order=round(bunker_order, 2),
+        bunker_start=round(bunker_start, 2),
+        bunker_complete=round(bunker_complete, 2),
+        expansion_start=round(expansion_start, 2),
+        defense_power=round(defense_power, 2),
+        required_power=round(item.pressure_power, 2),
+        bunker_path_distance=round(path_distance, 2),
+        construction_delay=round(item.construction_delay, 2),
+        builder_dies=item.builder_dies,
+        mineral_factor=round(item.mineral_factor, 3),
+        gas_factor=round(item.gas_factor, 3),
+        factory_resume_delay=round(factory_resume_delay, 2),
+        tech_rejections=tech_rejections,
+    )
+
+
+def simulate_v54(item: Scenario) -> Outcome:
+    # v54 keeps the v53 path/expansion policy, resumes an existing Terran
+    # foundation with a replacement SCV, and checks canMake before issuing a
+    # tech-building command.
+    path_distance = min(
+        190.0,
+        max(78.0, item.observed_path_offset + item.path_measurement_error * 0.20),
+    )
+    valid_path_pad = 65.0 <= path_distance <= 220.0
+    barracks_complete = 104.0 + 24.0 / item.mineral_factor
+    bunker_order = max(barracks_complete, min(item.scout_time, 120.0))
+    effective_delay = min(34.0, item.construction_delay * 0.55)
+    bunker_start = bunker_order + effective_delay
+    if item.builder_dies and item.builder_death_after_order < item.construction_delay:
+        bunker_start += 3.0
+    bunker_complete = bunker_start + 30.0
+
+    factory_resume_delay = 3.0 if item.factory_builder_dies else 0.0
+    factory_complete = (
+        180.0 + 42.0 / item.gas_factor + item.resource_dip / 6.5 + factory_resume_delay
+    )
+    marine_power = max(2.0, (item.pressure_time - barracks_complete) / 25.0)
+    tank_power = max(0.0, (item.pressure_time - factory_complete) / 48.0) * 2.2
+    bunker_power = 5.0 if bunker_complete <= item.pressure_time else 0.0
+    pressure_screen = (
+        4.0 if item.strategy == "two_gateway" else
+        3.5 if item.strategy == "one_gateway" else 1.0
+    )
     defense_power = marine_power + tank_power + bunker_power + pressure_screen
 
     base_expand = max(218.0, factory_complete + 18.0) + 38.0 / item.mineral_factor
@@ -219,13 +308,19 @@ def simulate_v53(item: Scenario) -> Outcome:
         builder_dies=item.builder_dies,
         mineral_factor=round(item.mineral_factor, 3),
         gas_factor=round(item.gas_factor, 3),
+        factory_resume_delay=round(factory_resume_delay, 2),
+        tech_rejections=0,
     )
 
 
 def write_results(outcomes: list[Outcome], output: Path, policy: str) -> dict[str, object]:
     output.mkdir(parents=True, exist_ok=True)
     with (output / "matches.csv").open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=asdict(outcomes[0]).keys())
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=asdict(outcomes[0]).keys(),
+            lineterminator="\n",
+        )
         writer.writeheader()
         writer.writerows(asdict(item) for item in outcomes)
 
@@ -245,6 +340,8 @@ def write_results(outcomes: list[Outcome], output: Path, policy: str) -> dict[st
         "failures": failures,
         "strategies": strategies,
         "mean_bunker_complete_seconds": round(mean(item.bunker_complete for item in outcomes if item.bunker_complete < 900), 2),
+        "mean_factory_resume_delay_seconds": round(mean(item.factory_resume_delay for item in outcomes), 2),
+        "tech_rejections": sum(item.tech_rejections for item in outcomes),
     }
     (output / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     return summary
@@ -254,13 +351,13 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runs", type=int, default=100)
     parser.add_argument("--seed", type=int, default=520053)
-    parser.add_argument("--policy", choices=("v52", "v53"), default="v52")
+    parser.add_argument("--policy", choices=("v52", "v53", "v54"), default="v52")
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
     if args.runs < 1:
         raise SystemExit("--runs must be positive")
     output = args.output or Path(f"simulation/results/{args.policy}")
-    simulate = simulate_v52 if args.policy == "v52" else simulate_v53
+    simulate = {"v52": simulate_v52, "v53": simulate_v53, "v54": simulate_v54}[args.policy]
     outcomes = [simulate(item) for item in scenarios(args.runs, args.seed)]
     summary = write_results(outcomes, output, args.policy)
     print(json.dumps(summary, indent=2))
