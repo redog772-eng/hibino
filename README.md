@@ -1,6 +1,12 @@
 # hibino
 히비노
 
+# STARTcraft AI v51
+
+Latest Windows installer: [STARTcraft_AI_v51_resilient_construction_protoss_hold.zip](releases/STARTcraft_AI_v51_resilient_construction_protoss_hold.zip)
+
+v51 prepares one main-entrance bunker against early Protoss pressure and restores accepted construction commands that stall before the foundation starts.
+
 # STARTcraft AI v50
 
 Latest Windows installer: [STARTcraft_AI_v50_natural_defense_factory_discipline.zip](releases/STARTcraft_AI_v50_natural_defense_factory_discipline.zip)
