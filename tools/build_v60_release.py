@@ -14,9 +14,11 @@ def main():
         command = archive.read('upgrade_ai_v59.cmd').decode().replace('v59', 'v60')
     prior = assignment(installer, 'NEW_SHA256')
     installer = installer.replace('v59', 'v60')
+    installer = installer.replace('AI v60: high ground covered tank advance',
+                                  'AI v60: combat order and medic support')
     installer = installer.replace(
         'current_sha not in (OLD_SHA256,NEW_SHA256,',
-        f'current_sha not in (OLD_SHA256,NEW_SHA256,{prior!r},')
+        f'current_sha not in (OLD_SHA256,NEW_SHA256,{prior!r},"5d6237a725a306dd2ede51357bc20a7d948e86591e07a5345e4d38c91bd63d46",')
     installer = replace_assignment(installer, 'SOURCE_B64', base64.b64encode(zlib.compress(source, 9)).decode())
     installer = replace_assignment(installer, 'NEW_SHA256', hashlib.sha256(source).hexdigest())
     installer = installer.replace('Expected verified v54-v58', 'Expected verified v54-v59')
@@ -31,7 +33,7 @@ def main():
 C++ 명령 스텁 검증 완료. 전체 Windows/BWAPI 빌드와 실제 경기는 미검증입니다.
 실전 전투력 개선은 아직 측정하지 않았습니다.
 '''
-    path = Path('releases/STARTcraft_AI_v60_combat_order_support.zip')
+    path = Path('releases/STARTcraft_AI_v60_1_marker_fix.zip')
     with zipfile.ZipFile(path, 'w') as archive:
         for name, data in [('source/StarterBot.cpp', source),
                            ('install_ai_v60.py', installer.encode()),

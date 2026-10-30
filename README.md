@@ -3,7 +3,7 @@
 
 # STARTcraft AI v60
 
-[Windows installer](releases/STARTcraft_AI_v60_combat_order_support.zip): close the game and bots, extract, and run `upgrade_ai_v60.cmd`. Verified v54-v59 sources are accepted. Existing v59 log filenames are retained.
+[Windows installer v60.1](releases/STARTcraft_AI_v60_1_marker_fix.zip): close the game and bots, extract, and run `upgrade_ai_v60.cmd`. Verified v54-v60 sources are accepted. v60.1 fixes the source/EXE version-marker mismatch that caused the original v60 installer to restore the previous installation. Existing v59 log filenames are retained.
 
 The final TvP hold controller now preserves attack-animation frames. Medics near their defensive anchor heal wounded organic allies within 160 pixels of both the anchor and Medic, rather than having their healing overwritten by a hold order. Identical healing commands are preserved; distant casualties do not pull Medics away from the line.
 
