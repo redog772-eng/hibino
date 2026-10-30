@@ -1,6 +1,22 @@
 # hibino
 히비노
 
+# STARTcraft AI v61
+
+[Windows installer](releases/STARTcraft_AI_v61_single_owner_natural.zip): close StarCraft and both bots, extract into a new folder, and run `upgrade_ai_v61.cmd`. Verified v54-v60.1 sources are accepted, including recovery from the original v60 source.
+
+The uploaded Destination replay contains 1,511 same-unit, same-frame movement/attack commands followed by Hold Position, and no Terran Command Center build commands. The [review](simulation/results/pluto_20261030_review.md) separates issued commands from completed units and notes that the CSV contains two sessions and uses a different time scale. Neither the CSV's old hard-coded version column nor its filename establishes the executable version.
+
+v61 excludes TvP Marines, Vultures, Goliaths and Medics from legacy army movement, reactive infantry targeting, traffic/stuck correction and staging orders. One mobile controller owns local fire, return to the Tank line, healing and bunker boarding; reserved mine-laying Vultures and Stim remain explicit exceptions. The screen follows the forward sieged Tank rather than remaining at the nearest bunker. It fires at visible, detected enemies already within weapon range and within 320 pixels of its anchor, and returns to the line when targets leave range. In-range High Templar receive targeting priority; Observers are excluded.
+
+Natural staging can start with two Tanks. Each short bound requires one covering sieged Tank, two nearby screen units, no ground contact within 430 pixels of the line, a sampled walkable segment and at most 160 pixels from the front Tank. Offensive bounds retain the three-Tank/two-cover/three-screen gate. Expansion readiness accepts two sieged Tanks within 400 pixels of the natural and rejects armed nonworker ground contacts within 640 pixels; existing economy, bunker, home-threat, site legality and retry conditions still apply. Terrain/pathfinding or other unmet conditions may still prevent staging; no guarantee of expansion timing is made.
+
+The existing `AI_v59_construction.csv` filename is retained, but new rows identify version **61** and include `NATURAL_WAIT`, `NATURAL_READY` and `NATURAL_LINE` diagnostic events. Siege-line and breach log filenames also remain unchanged.
+
+Third/fourth-base eligibility and the expansion dispatcher now accept the one-Barracks TvP mech plan. Their former three/four-Barracks prerequisites could never be met while TvP construction caps Barracks at one. Worker, Factory, completed-base, mineral and home-threat checks remain in place. Missing-site and initial-formation waits also generate diagnostic events.
+
+Validation: `python3 tools/check_v58_hold.py`, `python3 tools/check_v59_advance.py`, `python3 tools/check_v61_ownership.py`, and `python3 tools/check_v61_installer.py` pass. The installer check uses a mocked build to exercise source/EXE rollback and arena copying; it also verifies the executable marker occurs in the actual source. `python3 tools/check_v61_bwapi_headers.py --include <official-bwapi-4.4.0/bwapi/include>` syntax-checks the changed controller bodies against real BWAPI types and APIs. Full Windows linking/build and a new Pluto match remain unverified; these checks establish neither a win rate nor fewer actual casualties.
+
 # STARTcraft AI v60
 
 [Windows installer v60.1](releases/STARTcraft_AI_v60_1_marker_fix.zip): close the game and bots, extract, and run `upgrade_ai_v60.cmd`. Verified v54-v60 sources are accepted. v60.1 fixes the source/EXE version-marker mismatch that caused the original v60 installer to restore the previous installation. Existing v59 log filenames are retained.
