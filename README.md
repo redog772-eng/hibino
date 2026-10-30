@@ -1,6 +1,14 @@
 # hibino
 히비노
 
+Current-version validation now uses `simulation/run_current.py`, which extracts
+the current production, worker, budget and Siege-research functions and rejects
+a mismatched requested version. See [simulation coverage](simulation/README.md).
+The [v62 1,000-scenario results](simulation/results/current_v62_1000/summary.json)
+record 978 core-ready scenarios and 22 where Siege never started in the bounded
+resource model. These are not engine matches or win-rate results. The failure
+cases and coverage limits are retained in the [review](simulation/results/current_v62_1000/REVIEW.md).
+
 # STARTcraft AI v62
 
 [Windows installer](releases/STARTcraft_AI_v62_bunker_opening_priority.zip): close the game and bots, extract into a new folder, and run `upgrade_ai_v62.cmd`. Verified v54-v61 sources are accepted.
