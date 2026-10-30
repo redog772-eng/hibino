@@ -1,6 +1,8 @@
 # hibino
 히비노
 
+Map synchronization launcher: [download](releases/STARTcraft_vs_Pluto_map_sync.zip). Back up `tools/run_arena.ps1` next to your existing `run_STARTcraft_vs_Pluto.cmd`, then replace it with the file from this ZIP. Before launching either game, it copies missing/different `.scx` and `.scm` files from host/maps to pluto/maps at matching relative paths, verifies SHA256, and backs up differing destination files. It deletes no maps. This addresses file mismatches; it does not establish the cause of every in-game map transfer. Archive and static launch-order checks passed; PowerShell/StarCraft execution was unavailable here.
+
 # STARTcraft AI v58
 
 [Windows installer](releases/STARTcraft_AI_v58_hold_screen_one_barracks.zip). Extract into a new folder, close the game and bots, and run `upgrade_ai_v58.cmd`. Verified v54 through v57.1 installations are supported.
