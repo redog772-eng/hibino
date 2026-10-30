@@ -8,7 +8,7 @@ records the source, runner, adapter and mobile-test hashes.
 Run from any working directory:
 
 ```bash
-python3 /workspace/hibino/simulation/run_current.py --runs 1000 --seed 620002 --expected-version 63 --output /tmp/hibino-current-1000
+python3 /workspace/hibino/simulation/run_current.py --runs 1000 --seed 620002 --expected-version 64 --output /tmp/hibino-current-1000
 ```
 
 The runner executes actual current `AIV11Count`, `AIV62OpeningBudget`,
@@ -40,6 +40,20 @@ before comparing results. Raw frame values avoid mixing the construction CSV's
 time scale with replay or wall-clock time.
 
 The older `offline_v52.py` remains a historical model only.
+
+For v64 and later sources exposing the route helpers, the runner also executes
+`run_ground_routes.py` with the selected source, run count and seed. This compiles
+actual distance-field, segment-footprint and bound-selection functions. In each
+1,000-case set, 900 generated maps have a connected route through alternating
+wall gates, and 100 deliberately have a disconnected barrier. Two abstract
+Tank positions alternately advance under the actual natural-staging predicate.
+Reachable stalls, disconnected movement and footprint/distance violations fail
+the run. Separate result files live under `ground_routes/`.
+
+This extension covers route/waypoint policy. It does not execute the full Tank
+controller, its command timing, unit collisions, dynamic BWAPI grid/cache
+adapter, screen casualties or enemies. The route model is separate from the
+opening resource model; neither is a match simulator or a replay playback.
 
 Use `compare_runs.py BASELINE_DIR CANDIDATE_DIR --output comparison.json` for
 paired comparisons. It requires the same adapter, runner, mobile-test hashes,

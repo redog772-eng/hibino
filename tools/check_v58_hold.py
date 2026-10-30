@@ -48,8 +48,11 @@ auto AIV13OpponentRace(){return race;}
 bool AIV23VisibleThreat(BWAPI::Unit e){return e->visible;}
 BWAPI::Position AIV33AssemblyPoint(){return {1000,1000};}
 BWAPI::Position AIV6AttackTarget(){return {4000,1000};}
+BWAPI::Position g_v64NaturalGoal{-1,-1};
+int AIV64DistanceToGoal(BWAPI::Position p){return std::abs(p.x-g_v64NaturalGoal.x)+std::abs(p.y-g_v64NaturalGoal.y);}
 '''
 progress=s[s.index('static int AIV56Progress('):s.index('static BWAPI::Position AIV56PointOnLine(')]
+stub+='\nconstexpr bool HAS_NATURAL_ROUTE='+('true' if 'g_v64NaturalGoal' in body else 'false')+';\n'
 checks=r'''
 int main(){using namespace BWAPI;std::mt19937 rng(580001);
 for(int i=0;i<1000;++i){
@@ -114,6 +117,15 @@ assert(boarding==4);assert(bunker.orders==0);
 g_v57NoLoadUntil=frame+96;AIV58HoldScreen();
 for(auto& recruit:recruits)assert(recruit.cmd.type!=UnitCommandTypes::Right_Click_Unit);
 g_v57NoLoadUntil=-1;
+// The natural objective can point away from the enemy-main objective. Select
+// the Tank on that route, rather than a newly spawned rear Tank nearer enemy.
+if(HAS_NATURAL_ROUTE){
+g_v64NaturalGoal={1200,1000};marine.pos={1800,1000};marine.cmd.target=nullptr;
+tank.pos={2200,1000};rearTank.pos={1400,1000};
+state.mine.units={&marine,&tank,&rearTank};AIV58HoldScreen();
+assert(marine.cmd.type==UnitCommandTypes::Move);assert(!(marine.cmd.pos!=rearTank.pos));
+g_v64NaturalGoal={-1,-1};
+}
 state.mine.units={&marine,&tank};race=Races::Terran;count=marine.orders;AIV58HoldScreen();assert(marine.orders==count);
 }
 '''

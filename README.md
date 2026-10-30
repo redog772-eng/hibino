@@ -7,6 +7,16 @@ and rejects a mismatched version. See [simulation coverage](simulation/README.md
 and the latest [v62/v63 paired model review](simulation/results/current_v63_1000/REVIEW.md).
 These are not engine matches or win-rate results.
 
+# STARTcraft AI v64
+
+[Windows installer](releases/STARTcraft_AI_v64_ground_route_natural.zip): close the game and bots, extract into a new folder, and run `upgrade_ai_v64.cmd`. Verified v54-v63 sources are accepted. Source-bound model summaries are included in the ZIP.
+
+The [latest uploaded replay](simulation/results/pluto_after_v63_review.md) contains 17 Tank training requests, one Unsiege request and no additional Command Center request. CSVs were not provided, so the actual running version and exact natural-staging blocker remain unconfirmed. The review separates these observations from source findings and inferred causes.
+
+v64 shares a ground-route objective between Tank staging and its mobile screen. Reinforcements join the forward Tank instead of sieging beside the nearest rear Tank. Natural bounds follow a cached four-neighbor ground-distance field around obstacles; candidate segments check a 32-pixel footprint and retain the existing cover/screen/contact constraints. Tanks finish natural bounds within 16 pixels before sieging, rather than using the offensive controller's 105-pixel arrival radius. Offensive bounds and Siege gas reservation are retained. `NATURAL_BOUND` diagnostics include route distance, cover count, screen count, path validity and gap.
+
+Current-source validation: both seeds complete 1,000/1,000 opening readiness scenarios. Each seed also executes 1,000 route scenarios: 900 reachable cases arrive, 100 disconnected cases hold, with zero reachable stalls or measured safety violations. Current mobile command checks, official BWAPI header syntax checks, and mocked-build installation/rollback checks pass. Route checks cover actual route helper code but do not execute the entire Tank controller or the live grid/cache adapter. Full Windows build, Destination terrain traversal, real unit collision and actual match performance remain unverified. Construction rows identify **64** using the existing `AI_v59_construction.csv` filename.
+
 # STARTcraft AI v63
 
 [Windows installer](releases/STARTcraft_AI_v63_siege_gas_priority.zip): close the game and bots, extract into a new folder, and run `upgrade_ai_v63.cmd`. Verified v54-v62 sources are accepted. Model receipts matching the packaged source are included under `validation/`.

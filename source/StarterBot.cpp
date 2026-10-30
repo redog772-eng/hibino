@@ -3463,7 +3463,7 @@ static void AIV353Log(const char* stage,BWAPI::UnitType type,
     if(!out){game->printf("AI v36.1: construction log unavailable");return;}
     for(char& c:error)if(c==',' || c=='\n' || c=='\r')c=' ';
     if(header)out<<"version,frame,seconds,stage,building,worker,tile_x,tile_y,minerals,gas,error\n";
-    out<<"63,"<<game->getFrameCount()<<','<<game->elapsedTime()<<','<<stage<<','
+    out<<"64,"<<game->getFrameCount()<<','<<game->elapsedTime()<<','<<stage<<','
        <<type.getName()<<','<<(worker?worker->getID():-1)<<','<<tile.x<<','<<tile.y<<','
        <<me->minerals()<<','<<me->gas()<<','<<error<<'\n';
 }
@@ -7086,7 +7086,7 @@ void StarterBot::onStart()
 {
     g_v353Tasks.clear();g_v353WatchPreviousFrame=-1;
     AIV353Log("START",BWAPI::UnitTypes::Terran_SCV,nullptr,BWAPI::TilePositions::None);
-    BWAPI::Broodwar->printf("AI v63: reserve siege research gas");
+    BWAPI::Broodwar->printf("AI v64: ground route natural reinforcement");
     // Set our BWAPI options here    
 	BWAPI::Broodwar->setLocalSpeed(10);
     BWAPI::Broodwar->setFrameSkip(0);
@@ -8282,6 +8282,120 @@ static BWAPI::Position g_v56MoveTarget=BWAPI::Positions::None;
 static std::map<int,int> g_v56LastOrder;
 static BWAPI::Position g_v59Ridge=BWAPI::Positions::None;
 static bool g_v59Formed=false;
+static BWAPI::Position g_v64NaturalGoal=BWAPI::Positions::None;
+static std::vector<unsigned char> g_v64Open;
+static std::vector<int> g_v64Distance;
+static int g_v64Width=0,g_v64Height=0,g_v64RouteFrame=-10000;
+static BWAPI::Position g_v64RouteGoal=BWAPI::Positions::None;
+
+static std::vector<int> AIV64GroundDistances(const std::vector<unsigned char>& open,
+                                            int w,int h,int goal) {
+    if(w<=0 || h<=0 || (int)open.size()!=w*h)return {};
+    std::vector<int> distance(w*h,-1),queue;
+    if(goal<0 || goal>=w*h || !open[goal])return distance;
+    distance[goal]=0;queue.push_back(goal);
+    const int dx[4]={1,-1,0,0},dy[4]={0,0,1,-1};
+    for(size_t head=0;head<queue.size();++head) {
+        const int at=queue[head],x=at%w,y=at/w;
+        for(int k=0;k<4;++k) {
+            const int nx=x+dx[k],ny=y+dy[k];
+            if(nx<0 || ny<0 || nx>=w || ny>=h)continue;
+            const int next=ny*w+nx;
+            if(open[next] && distance[next]<0){distance[next]=distance[at]+1;queue.push_back(next);}
+        }
+    }
+    return distance;
+}
+
+static bool AIV64ClearSegment(const std::vector<unsigned char>& open,int w,int h,
+                               int ax,int ay,int bx,int by) {
+    if(w<=0 || h<=0 || (int)open.size()!=w*h)return false;
+    const int steps=(std::max)(1,(std::max)(std::abs(bx-ax),std::abs(by-ay))+1);
+    for(int k=0;k<=steps;++k) {
+        const int px=ax+(bx-ax)*k/steps,py=ay+(by-ay)*k/steps;
+        for(int ox:{-16,15})for(int oy:{-16,15}) {
+            const int x=px+ox,y=py+oy;
+            if(x<0 || y<0 || x>=w*32 || y>=h*32 || !open[(y/32)*w+x/32])return false;
+        }
+    }
+    return true;
+}
+
+static int AIV64BoundCell(const std::vector<unsigned char>& open,const std::vector<int>& distance,
+                          int w,int h,int rx,int ry,int fx,int fy) {
+    if(w<=0 || h<=0 || (int)distance.size()!=w*h || (int)open.size()!=w*h ||
+       rx<0 || ry<0 || rx>=w*32 || ry>=h*32)return -1;
+    int at=(ry/32)*w+rx/32,best=-1;
+    if(distance[at]<0)return -1;
+    const int dx[4]={1,-1,0,0},dy[4]={0,0,1,-1};
+    // Follow a real ground route, ending this bound before a corner. A later
+    // covered bound can turn that corner instead of trying the blocked ray.
+    for(int steps=0;steps<16 && distance[at]>0;++steps) {
+        int next=-1;
+        for(int k=0;k<4;++k) {
+            const int nx=at%w+dx[k],ny=at/w+dy[k];
+            if(nx<0 || ny<0 || nx>=w || ny>=h)continue;
+            const int cell=ny*w+nx;
+            if(open[cell] && distance[cell]==distance[at]-1){next=cell;break;}
+        }
+        if(next<0)break;
+        const int x=(next%w)*32+16,y=(next/w)*32+16;
+        if(!AIV64ClearSegment(open,w,h,rx,ry,x,y))break;
+        if((x-rx)*(x-rx)+(y-ry)*(y-ry)>288*288)break;
+        if((x-fx)*(x-fx)+(y-fy)*(y-fy)<=160*160)best=next;
+        at=next;
+    }
+    return best;
+}
+
+static void AIV64UpdateRoute(BWAPI::Position goal) {
+    auto& game=BWAPI::Broodwar;const int now=game->getFrameCount();
+    const int w=game->mapWidth(),h=game->mapHeight();
+    if(!goal.isValid() || w<=0 || h<=0 || w>512 || h>512)return;
+    if(now>=g_v64RouteFrame && now-g_v64RouteFrame<96 && goal==g_v64RouteGoal &&
+       w==g_v64Width && h==g_v64Height)return;
+    g_v64RouteFrame=now;g_v64RouteGoal=goal;g_v64Width=w;g_v64Height=h;
+    g_v64Open.assign(w*h,0);
+    for(int y=0;y<h;++y)for(int x=0;x<w;++x) {
+        bool clear=true;
+        for(int oy=0;oy<4;++oy)for(int ox=0;ox<4;++ox)
+            if(!game->isWalkable(x*4+ox,y*4+oy))clear=false;
+        g_v64Open[y*w+x]=clear;
+    }
+    for(auto u:game->getAllUnits())if(u && u->exists()) {
+        const auto t=u->getType();
+        if(u->isFlying() || (!t.isBuilding() && !t.isResourceContainer()) ||
+           (u->getPlayer()!=game->self() && !u->isVisible() && !t.isResourceContainer()))continue;
+        const auto tile=u->getTilePosition();
+        for(int y=tile.y;y<tile.y+t.tileHeight();++y)for(int x=tile.x;x<tile.x+t.tileWidth();++x)
+            if(x>=0 && y>=0 && x<w && y<h)g_v64Open[y*w+x]=0;
+    }
+    int goalCell=-1,score=10000000;
+    const auto tile=BWAPI::TilePosition(goal);
+    for(int dy=-4;dy<=4;++dy)for(int dx=-4;dx<=4;++dx) {
+        const int x=tile.x+dx,y=tile.y+dy;
+        if(x<0 || y<0 || x>=w || y>=h || !g_v64Open[y*w+x])continue;
+        const int cost=dx*dx+dy*dy;
+        if(cost<score){score=cost;goalCell=y*w+x;}
+    }
+    g_v64Distance=AIV64GroundDistances(g_v64Open,w,h,goalCell);
+}
+
+static int AIV64DistanceToGoal(BWAPI::Position position) {
+    if(position.x<0 || position.y<0 || position.x>=g_v64Width*32 || position.y>=g_v64Height*32)
+        return 10000000;
+    const int at=(position.y/32)*g_v64Width+position.x/32;
+    if(at<0 || at>=(int)g_v64Distance.size() || g_v64Distance[at]<0)return 10000000;
+    return g_v64Distance[at];
+}
+
+static BWAPI::Position AIV64NaturalStep(BWAPI::Unit rear,BWAPI::Unit front) {
+    const auto a=rear->getPosition(),b=front->getPosition();
+    const int cell=AIV64BoundCell(g_v64Open,g_v64Distance,g_v64Width,g_v64Height,a.x,a.y,b.x,b.y);
+    if(cell<0)return BWAPI::Positions::None;
+    const BWAPI::Position target((cell%g_v64Width)*32+16,(cell/g_v64Width)*32+16);
+    return rear->hasPath(target)?target:BWAPI::Positions::None;
+}
 
 static bool AIV59CanAdvance(int tanks,int cover,int screen,bool contact,
                              int gap,bool clearPath) {
@@ -8373,6 +8487,8 @@ static void AIV56SiegeLineController() {
     auto& game=BWAPI::Broodwar;auto me=game->self();if(!me)return;
     const int now=game->getFrameCount();
     if(now<g_v56PreviousFrame) {
+        g_v64NaturalGoal=BWAPI::Positions::None;g_v64RouteFrame=-10000;
+        g_v64Open.clear();g_v64Distance.clear();
         g_v59Ridge=BWAPI::Positions::None;
         g_v59Formed=false;
         g_v56SiegeLineIds.clear();g_v56LastOrder.clear();
@@ -8407,6 +8523,8 @@ static void AIV56SiegeLineController() {
     for(auto tank:tanks)if(tank->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode &&
         tank->getDistance(home)<=220)++formed;
     const bool preparingNatural=tvp && !g_v55NaturalPrepared;
+    g_v64NaturalGoal=preparingNatural?enemy:BWAPI::Positions::None;
+    if(preparingNatural)AIV64UpdateRoute(enemy);
     if(formed>=(preparingNatural?2:3))g_v59Formed=true;
     const bool pushing=(g_v7State==AIV7_ATTACK || (tvp && !g_v55NaturalPrepared)) &&
                        enemy.isValid() && tanks.size()>=(preparingNatural?2u:3u) &&
@@ -8443,6 +8561,8 @@ static void AIV56SiegeLineController() {
     }
 
     std::sort(tanks.begin(),tanks.end(),[&](BWAPI::Unit a,BWAPI::Unit b){
+        if(preparingNatural)return AIV64DistanceToGoal(a->getPosition())>
+                                   AIV64DistanceToGoal(b->getPosition());
         return AIV56Progress(a->getPosition(),home,enemy)<
                AIV56Progress(b->getPosition(),home,enemy);
     });
@@ -8478,11 +8598,11 @@ static void AIV56SiegeLineController() {
             return;
         }
         if(moving->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode) {
-            if(moving->getDistance(g_v56MoveTarget)<=125 || danger) {
+            if(moving->getDistance(g_v56MoveTarget)<=(preparingNatural?40:125) || danger) {
                 g_v56MovingTank=-1;g_v56MoveTarget=BWAPI::Positions::None;
             } else if(!danger && now-g_v56LastOrder[id]>72 && moving->unsiege())
                 g_v56LastOrder[id]=now;
-        } else if(danger || moving->getDistance(g_v56MoveTarget)<=105) {
+        } else if(danger || moving->getDistance(g_v56MoveTarget)<=(preparingNatural?16:105)) {
             if(now-g_v56LastOrder[id]>36 && moving->siege())g_v56LastOrder[id]=now;
         } else if(now-g_v56LastOrder[id]>60 && moving->move(g_v56MoveTarget)) {
             g_v56LastOrder[id]=now;
@@ -8498,6 +8618,12 @@ static void AIV56SiegeLineController() {
         for(auto ally:tanks)if(ally!=tank &&
             ally->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode &&
             tank->getDistance(ally)<distance){cover=ally;distance=tank->getDistance(ally);}
+        // Reinforcements join the forward line instead of immediately sieging
+        // beside the nearest rear Tank and growing an immobile Factory pile.
+        if(preparingNatural && tank!=front &&
+           front->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode) {
+            cover=front;distance=tank->getDistance(front);
+        }
         if((cover && distance>220) || AIV56GroundContact(tank->getPosition(),192)) {
             if(now-g_v56LastOrder[tank->getID()]>24 &&
                tank->move(cover?cover->getPosition():home))g_v56LastOrder[tank->getID()]=now;
@@ -8516,7 +8642,18 @@ static void AIV56SiegeLineController() {
         AIV56Progress(tanks.front()->getPosition(),home,enemy)<enemyProgress-64))) {
         BWAPI::Unit rear=nullptr;
         for(auto tank:tanks)if(tank!=front &&
-            tank->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode){rear=tank;break;}
+            tank->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode) {
+            if(preparingNatural) {
+                const auto step=AIV64NaturalStep(tank,front);
+                if(!step.isValid())continue;
+                bool covered=false;
+                for(auto ally:tanks)if(ally!=tank &&
+                    ally->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode &&
+                    ally->getDistance(step)<=256 && ally->getDistance(tank)<=320)covered=true;
+                if(!covered)continue;
+            }
+            rear=tank;break;
+        }
         if(rear) {
             const int nextProgress=(std::min)(enemyProgress-standOff,frontProgress+128);
             const auto frontPos=front->getPosition();
@@ -8524,6 +8661,7 @@ static void AIV56SiegeLineController() {
                                     (long long)(frontPos.x-home.x)*(enemy.y-home.y);
             const int side=lateral>=0?-80:80;
             BWAPI::Position target=AIV56PointOnLine(rear,home,enemy,nextProgress,side);
+            if(preparingNatural)target=AIV64NaturalStep(rear,front);
             int covers=0,screen=0,gap=10000000;bool clearPath=target.isValid();
             if(clearPath) {
                 for(auto ally:tanks)if(ally!=rear &&
@@ -8539,6 +8677,11 @@ static void AIV56SiegeLineController() {
                 for(int k=1;k<=16;++k)if(!game->isWalkable(
                     (p.x+(target.x-p.x)*k/16)/8,(p.y+(target.y-p.y)*k/16)/8))clearPath=false;
             }
+            if(preparingNatural && now%240==0)AIV353Log("NATURAL_BOUND",
+                BWAPI::UnitTypes::Terran_Command_Center,rear,BWAPI::TilePositions::None,
+                "route="+std::to_string(AIV64DistanceToGoal(rear->getPosition()))+
+                ";cover="+std::to_string(covers)+";screen="+std::to_string(screen)+
+                ";path="+std::to_string(clearPath?1:0)+";gap="+std::to_string(gap));
             const bool allowed=preparingNatural
                 ?AIV61CanStageNatural((int)tanks.size(),covers,screen,contact,gap,clearPath)
                 :AIV59CanAdvance((int)tanks.size(),covers,screen,contact,gap,clearPath);
@@ -8613,10 +8756,12 @@ static void AIV58HoldScreen() {
             if(t!=BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode)continue;
             // Follow the forward Tank, not the nearest stationary bunker.
             // Otherwise the infantry never accompanies a natural bound.
-            const auto objective=AIV6AttackTarget();
+            const auto objective=g_v64NaturalGoal.isValid()?g_v64NaturalGoal:AIV6AttackTarget();
             const BWAPI::Position home(me->getStartLocation());
             const int progress=AIV56Progress(ally->getPosition(),home,objective);
-            if(!anchor || progress>AIV56Progress(anchor->getPosition(),home,objective))anchor=ally;
+            if(!anchor || (g_v64NaturalGoal.isValid()
+                ?AIV64DistanceToGoal(ally->getPosition())<AIV64DistanceToGoal(anchor->getPosition())
+                :progress>AIV56Progress(anchor->getPosition(),home,objective)))anchor=ally;
         }
         if(!anchor)for(auto ally:me->getUnits()) {
             if(!ally || !ally->exists() || !ally->isCompleted() ||

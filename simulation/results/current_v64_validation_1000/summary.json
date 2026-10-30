@@ -1,0 +1,44 @@
+{
+  "source_version": 64,
+  "source_sha256": "f5de4bff9163c14cd4eb1014f03403147c6f73d5fcb0bb57ae6bde246bda35a1",
+  "adapter_sha256": "693dc9ccbbe62b75a45358ae90bd3ccee9329795694cb430cb9561f6d54bcac5",
+  "runner_sha256": "bc2ab41cad7369c04dfc4cc7411023ef21505adb7d351178963ac6361790d307",
+  "mobile_test_sha256": "381d9ba9a1f203e42f71f74bd47cb6e47f4da412efbcc64c4c9a33bbf01b15fd",
+  "seed": 640001,
+  "runs": 1000,
+  "validation_type": "bounded_current_cpp_opening_model_not_engine_matches",
+  "model_start_frame": 3600,
+  "model_deadline_frame": 18000,
+  "core_ready": 1000,
+  "core_not_ready_by_deadline": 0,
+  "incomplete_reasons": {},
+  "milestones_mean_frame": {
+    "factory_frame": 5598.0,
+    "first_tank_frame": 8155.2,
+    "second_tank_frame": 9494.9,
+    "siege_start_frame": 6884.0,
+    "siege_done_frame": 8084.0,
+    "ready_frame": 9497.4
+  },
+  "assumptions": [
+    "Starts after Barracks/Refinery with 14-18 workers and 2-4 Marines, not game start.",
+    "Mineral income is 0.018-0.036 per miner/frame; gas income is assumed.",
+    "Placement/supply scheduling, travel and interruptions are modeled, not the full bot.",
+    "Does not execute the full economy/expansion, scouting, gas assignment or production-scaling directors.",
+    "Up to four worker losses; no enemy army, combat damage, terrain, pathfinding or win condition.",
+    "Budget, worker spending, Factory training and Siege research execute actual extracted current C++."
+  ],
+  "current_mobile_command_checks": "passed",
+  "movement_route_model": {
+    "source_sha256": "f5de4bff9163c14cd4eb1014f03403147c6f73d5fcb0bb57ae6bde246bda35a1",
+    "seed": 640001,
+    "runs": 1000,
+    "runner_sha256": "2f574f5fd23f3db9eec2febe412db2ec3623f17e3c7a41b96b2112137d5cfe8d",
+    "reachable": 900,
+    "arrived": 900,
+    "unreachable_held": 100,
+    "reachable_stalled": 0,
+    "unsafe_cases": 0,
+    "scope": "two-Tank route/waypoint policy; no engine movement, unit collision, enemies or live map-grid adapter"
+  }
+}

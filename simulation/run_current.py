@@ -94,7 +94,20 @@ summary = {
 commands = subprocess.run(['python3','tools/check_v58_hold.py','--source',str(args.source.resolve())],cwd=ROOT,capture_output=True,text=True)
 (args.output / 'mobile_checks.txt').write_text(commands.stdout+commands.stderr)
 summary['current_mobile_command_checks'] = 'passed' if commands.returncode==0 else 'failed'
+route_code=0
+if 'AIV64GroundDistances(' in source:
+    route=subprocess.run(['python3',str(ROOT/'simulation/run_ground_routes.py'),
+        '--source',str(args.source.resolve()),'--runs',str(args.runs),'--seed',str(args.seed),
+        '--output',str((args.output/'ground_routes').resolve())],cwd=ROOT,capture_output=True,text=True)
+    (args.output/'ground_route_checks.txt').write_text(route.stdout+route.stderr)
+    route_code=route.returncode
+    route_summary=args.output/'ground_routes/summary.json'
+    summary['movement_route_model']=json.loads(route_summary.read_text()) if route_summary.is_file() else {'status':'failed'}
+else:
+    summary['movement_route_model']={'status':'not_covered_by_this_source_version'}
 (args.output / 'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
 print(json.dumps(summary,indent=2))
 if commands.returncode:
     raise SystemExit(commands.returncode)
+if route_code:
+    raise SystemExit(route_code)
