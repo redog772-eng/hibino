@@ -16,24 +16,26 @@ stub=r'''
 namespace BWAPI {
 struct Position {int x=0,y=0;bool isValid()const{return x>=0&&y>=0;} bool operator!=(Position b)const{return x!=b.x||y!=b.y;}};
 namespace UnitTypes {enum T {Terran_Marine,Terran_Vulture,Terran_Goliath,Terran_Medic,Terran_Command_Center,Terran_Siege_Tank_Siege_Mode,Terran_Bunker,Protoss_Observer,Protoss_High_Templar};}
-namespace UnitCommandTypes {enum T {Attack_Unit,Move,Hold_Position,Use_Tech_Unit};}
+namespace UnitCommandTypes {enum T {Attack_Unit,Move,Hold_Position,Use_Tech_Unit,Right_Click_Unit};}
 namespace TechTypes {enum T {Healing};}
 struct Type {UnitTypes::T value;operator UnitTypes::T()const{return value;}bool isOrganic()const{return value==UnitTypes::Terran_Marine || value==UnitTypes::Terran_Medic;}bool isBuilding()const{return value==UnitTypes::Terran_Command_Center || value==UnitTypes::Terran_Bunker;}int maxHitPoints()const{return 100;}};
 namespace Races {enum T {Protoss,Terran};}
 struct U; struct P;
+int frame=1000;
 struct Command {UnitCommandTypes::T type=UnitCommandTypes::Attack_Unit;Position pos;U* target=nullptr;U* getTarget()const{return target;}auto getTechType()const{return TechTypes::Healing;}auto getType()const{return type;}auto getTargetPosition()const{return pos;}};
-struct U {int id=0;UnitTypes::T type=UnitTypes::Terran_Marine;Position pos;bool loaded=false,fly=false,visible=true,detected=true,invincible=false;Command cmd;int orders=0;
+struct U {int id=0;UnitTypes::T type=UnitTypes::Terran_Marine;Position pos;bool loaded=false,fly=false,visible=true,detected=true,invincible=false;Command cmd;int orders=0,lastFrame=-10000;P* player=nullptr;
+ int getLastCommandFrame(){return lastFrame;}bool rightClick(U* target){cmd.type=UnitCommandTypes::Right_Click_Unit;cmd.target=target;lastFrame=frame;++orders;return true;}
  bool isVisible(){return visible;}bool isDetected(){return detected;}bool isInvincible(){return invincible;}bool isInWeaponRange(U* e){return getDistance(e)<=128 && !(type==UnitTypes::Terran_Vulture && e->fly);}
- std::vector<U*> passengers;auto& getLoadedUnits(){return passengers;}bool load(U* u){u->cmd.target=this;++orders;return true;}
+ std::vector<U*> passengers;auto& getLoadedUnits(){return passengers;}bool load(U* u){cmd.target=u;lastFrame=frame;++orders;return true;}
  bool attack(U* e){cmd.type=UnitCommandTypes::Attack_Unit;cmd.target=e;++orders;return true;}
  bool attacking=false;int hp=100;bool isAttackFrame(){return attacking;}int getHitPoints(){return hp;}bool useTech(TechTypes::T,U* patient){cmd.type=UnitCommandTypes::Use_Tech_Unit;cmd.target=patient;++orders;return true;}
- P* getPlayer(){return nullptr;}bool exists(){return true;}bool isCompleted(){return true;}bool isLoaded(){return loaded;}bool isFlying(){return fly;}Type getType(){return {type};}int getID(){return id;}
+ P* getPlayer(){return player;}bool exists(){return true;}bool isCompleted(){return true;}bool isLoaded(){return loaded;}bool isFlying(){return fly;}Type getType(){return {type};}int getID(){return id;}
  int getDistance(Position p){return int(std::hypot(pos.x-p.x,pos.y-p.y));}int getDistance(U* u){return getDistance(u->pos);}Position getPosition(){return pos;}
  bool hasPath(Position){return true;}auto getLastCommand(){return cmd;}
- bool move(Position p){cmd={UnitCommandTypes::Move,p};++orders;return true;}bool holdPosition(){cmd.type=UnitCommandTypes::Hold_Position;++orders;return true;}
+ bool move(Position p){cmd={UnitCommandTypes::Move,p};lastFrame=frame;++orders;return true;}bool holdPosition(){cmd.type=UnitCommandTypes::Hold_Position;cmd.target=nullptr;lastFrame=frame;++orders;return true;}
 }; using Unit=U*;
 struct P {std::vector<Unit> units;auto& getUnits(){return units;}Position getStartLocation(){return {1000,1000};}};
-struct G {int getFrameCount(){return 1000;}P mine,foe;P* self(){return &mine;}std::vector<P*> enemies(){return {&foe};}};
+struct G {int getFrameCount(){return frame;}P mine,foe;P* self(){return &mine;}std::vector<P*> enemies(){return {&foe};}};
 G state;G* Broodwar=&state;
 }
 int g_v57NoLoadUntil=-1;
@@ -94,6 +96,21 @@ state.mine.units={&marine,&rearTank,&tank,&bunker};AIV58HoldScreen();
 assert(marine.cmd.type==UnitCommandTypes::Move);assert(!(marine.cmd.pos!=tank.pos));
 // Before Tanks are available, this owner also supplies bunker boarding.
 state.mine.units={&marine,&bunker};marine.cmd.target=nullptr;AIV58HoldScreen();assert(marine.cmd.target==&bunker);
+assert(marine.cmd.type==UnitCommandTypes::Right_Click_Unit);assert(bunker.orders==0);
+// Real BWAPI load() updates the Bunker's command, not the Marine's. Model
+// that distinction and reserve four incoming seats without a per-frame loop.
+bunker.player=&state.mine;marine.player=&state.mine;
+count=marine.orders;for(int i=0;i<100;++i){++frame;AIV58HoldScreen();}
+assert(marine.orders==count);assert(bunker.orders==0);
+frame+=192;AIV58HoldScreen();assert(marine.orders==count+1);
+U recruits[5];state.mine.units={&bunker};
+for(auto& recruit:recruits){recruit.pos={1800,1000};recruit.player=&state.mine;state.mine.units.push_back(&recruit);}
+AIV58HoldScreen();int boarding=0;
+for(auto& recruit:recruits)if(recruit.cmd.type==UnitCommandTypes::Right_Click_Unit)++boarding;
+assert(boarding==4);assert(bunker.orders==0);
+g_v57NoLoadUntil=frame+96;AIV58HoldScreen();
+for(auto& recruit:recruits)assert(recruit.cmd.type!=UnitCommandTypes::Right_Click_Unit);
+g_v57NoLoadUntil=-1;
 state.mine.units={&marine,&tank};race=Races::Terran;count=marine.orders;AIV58HoldScreen();assert(marine.orders==count);
 }
 '''

@@ -1,6 +1,18 @@
 # hibino
 히비노
 
+# STARTcraft AI v62
+
+[Windows installer](releases/STARTcraft_AI_v62_bunker_opening_priority.zip): close the game and bots, extract into a new folder, and run `upgrade_ai_v62.cmd`. Verified v54-v61 sources are accepted.
+
+The latest [v61 match review](simulation/results/pluto_v61_20261030_review.md) confirms zero of the previously observed same-frame move/attack-to-hold overrides. It also records 567 Bunker pickup requests, only one Tank production request, and no Command Center expansion request before the replay ends. This is not evidence of improved match strength; the opponent opening, game type and duration differ from the earlier replay.
+
+v62 issues boarding commands on Marines via right-click, counts approaching Marines against the Bunker's four seats, and gives an existing request 192 frames before retrying. The controller test now models real Bunker-side `load()` command ownership, rather than incorrectly updating a Marine's last command. Base-breach boarding restrictions remain authoritative.
+
+One-base TvP retains 200 minerals for its first Factory once 14 workers, a Barracks and 100 gas are available; with a Factory it retains 150 for the first two Tanks and Siege readiness. This budget applies to additional SCVs and Marines beyond a minimum four-unit screen, not emergency supply, Tank production or repairs. It releases when two Tanks exist and Siege is researched/researching, or after a second Command Center exists. Siege research is attempted before Factory production spending. Additional Factory scaling waits for that initial Tank/Siege core, and routine TvP supply reserves now engage within eight half-supply rather than 22. This can slow worker and Marine reinforcement, so actual opening timings and survivability need a new match.
+
+Existing filenames are retained. New construction rows identify version **62** and add `OPENING_BUDGET` events. Validate with `python3 tools/check_v58_hold.py`, `python3 tools/check_v59_advance.py`, `python3 tools/check_v62_opening.py`, and `python3 tools/check_v61_installer.py --version 62 --archive releases/STARTcraft_AI_v62_bunker_opening_priority.zip`. The official-header check also covers the changed worker and production functions. Windows linking/build and real-match performance remain unverified.
+
 # STARTcraft AI v61
 
 [Windows installer](releases/STARTcraft_AI_v61_single_owner_natural.zip): close StarCraft and both bots, extract into a new folder, and run `upgrade_ai_v61.cmd`. Verified v54-v60.1 sources are accepted, including recovery from the original v60 source.

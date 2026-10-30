@@ -4,6 +4,7 @@ MSBuild/tasklist are mocked to test installer control flow, not actual Windows
 compilation. The executable marker must also occur in the real source.
 """
 import ast
+import argparse
 import base64
 import hashlib
 from pathlib import Path
@@ -14,18 +15,23 @@ import zipfile
 import zlib
 from build_v53_release import assignment
 
-path = Path('releases/STARTcraft_AI_v61_single_owner_natural.zip')
+parser = argparse.ArgumentParser()
+parser.add_argument('--archive', type=Path, default=Path('releases/STARTcraft_AI_v61_single_owner_natural.zip'))
+parser.add_argument('--version', type=int, default=61)
+args = parser.parse_args()
+version = args.version
+path = args.archive
 assert hashlib.sha256(path.read_bytes()).hexdigest() == path.with_suffix('.sha256').read_text().split()[0]
 with zipfile.ZipFile(path) as archive:
     assert archive.testzip() is None
     source = archive.read('source/StarterBot.cpp')
-    code = archive.read('install_ai_v61.py').decode()
+    code = archive.read(f'install_ai_v{version}.py').decode()
 assert source == Path('source/StarterBot.cpp').read_bytes()
 assert zlib.decompress(base64.b64decode(assignment(code, 'SOURCE_B64'))) == source
 markers = [n.value for n in ast.walk(ast.parse(code)) if isinstance(n, ast.Constant)
-           and isinstance(n.value, bytes) and n.value.startswith(b'AI v61:')]
+           and isinstance(n.value, bytes) and n.value.startswith(f'AI v{version}:'.encode())]
 assert len(markers) == 1 and b'printf("' + markers[0] + b'")' in source
-assert b'out<<"61,"' in source
+assert f'out<<"{version},"'.encode() in source
 namespace = {'__name__': 'test'}
 exec(code, namespace)
 
@@ -44,8 +50,8 @@ with tempfile.TemporaryDirectory() as directory:
     arena = root / 'arena/STARTcraft_vs_Pluto/host/bin/StarterBot.exe'
     sys.argv = ['installer', '--check-only']
     checked = 0
-    for version in range(54, 62):
-        for previous in sorted(Path('releases').glob(f'STARTcraft_AI_v{version}_*.zip')):
+    for previous_version in range(54, version+1):
+        for previous in sorted(Path('releases').glob(f'STARTcraft_AI_v{previous_version}_*.zip')):
             with zipfile.ZipFile(previous) as archive:
                 data = archive.read('source/StarterBot.cpp')
             target.write_bytes(data)
@@ -87,7 +93,7 @@ with tempfile.TemporaryDirectory() as directory:
     namespace['main']()
     assert target.read_bytes() == source
     assert exe.read_bytes() == arena.read_bytes() and markers[0] in exe.read_bytes()
-    assert (root / 'ai_backups/v61_last_backup.txt').is_file()
+    assert (root / f'ai_backups/v{version}_last_backup.txt').is_file()
     valid_marker = False
     target.write_bytes(old_source)
     exe.write_bytes(b'old-executable')

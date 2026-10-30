@@ -41,8 +41,21 @@ extern int g_v55PreviousFrame,g_v57NoLoadUntil,g_v7State;
 extern bool g_v55NaturalPrepared;
 const int AIV7_ATTACK=2;
 '''
+prefix += source[source.index('struct AIV11Counts {'):source.index('static int AIV62OpeningBudget(')]
+prefix += r'''
+AIV11Counts AIV11Count();
+void AIV11Reset();
+int AIV11WorkerTarget();
+bool AIV11PendingBuild(BWAPI::UnitType,int=420);
+void AIV3ResearchSiegeMode();
+int AIV25Seen(BWAPI::UnitType);
+extern int g_v11NoExpansionUntil,g_v5ScoutId,g_v11Reserve,g_v28MilitaryMineralReserve,g_v28GasReserve;
+extern std::map<int,int> g_v11ShopFailures;
+extern bool g_v29TerranMech;
+'''
 cpp = prefix + source[source.index('static int g_v56PreviousFrame='):source.index('static bool AIV59CanAdvance(')]
-for result, name in [('bool', 'AIV61OwnsMobile'), ('bool', 'AIV59CanAdvance'),
+for result, name in [('int', 'AIV62OpeningBudget'), ('void', 'AIV11TrainWorkers'),
+                     ('void', 'AIV11Produce'), ('bool', 'AIV61OwnsMobile'), ('bool', 'AIV59CanAdvance'),
                      ('bool', 'AIV61CanStageNatural'), ('BWAPI::Position', 'AIV59HighGround'),
                      ('int', 'AIV56Progress'), ('BWAPI::Position', 'AIV56PointOnLine'),
                      ('bool', 'AIV56GroundContact'), ('void', 'AIV55PrepareNatural'),

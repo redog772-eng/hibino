@@ -2576,6 +2576,13 @@ struct AIV11Counts {
     int marine=0, medic=0, tank=0, pending=0;
 };
 
+static int AIV62OpeningBudget(bool tvp,int bases,int workers,int barracks,
+                              int factories,int tanks,bool siegeActive,int gas) {
+    if(!tvp || bases!=1 || workers<14 || barracks==0)return 0;
+    if(factories==0)return gas>=100?200:0;
+    return tanks<2 || !siegeActive?150:0;
+}
+
 AIV11Counts AIV11Count() {
     AIV11Counts c;
     auto me=BWAPI::Broodwar->self();
@@ -2658,6 +2665,12 @@ void AIV11TrainWorkers() {
     AIV11Reset();
     if(game->getFrameCount()%12)return;
     AIV11Counts c=AIV11Count();
+    const int openingBudget=AIV62OpeningBudget(AIV13OpponentRace()==BWAPI::Races::Protoss,
+        c.cc,c.scv,c.barracks,c.factory,c.tank,
+        me->hasResearched(BWAPI::TechTypes::Tank_Siege_Mode) ||
+        me->isResearching(BWAPI::TechTypes::Tank_Siege_Mode),me->gas());
+    // Save the next mech purchase before adding another 50-mineral worker.
+    if(openingBudget>0 && me->minerals()<openingBudget+50)return;
     // STARTCRAFT_AI_V46_TVZ_TWO_RAX_EXPAND: once the 15th SCV and both
     // opening Barracks exist, stop adding workers until the natural is
     // ordered.  v45 announced an expansion at 16 SCVs but AIV16Expand still
@@ -3450,7 +3463,7 @@ static void AIV353Log(const char* stage,BWAPI::UnitType type,
     if(!out){game->printf("AI v36.1: construction log unavailable");return;}
     for(char& c:error)if(c==',' || c=='\n' || c=='\r')c=' ';
     if(header)out<<"version,frame,seconds,stage,building,worker,tile_x,tile_y,minerals,gas,error\n";
-    out<<"61,"<<game->getFrameCount()<<','<<game->elapsedTime()<<','<<stage<<','
+    out<<"62,"<<game->getFrameCount()<<','<<game->elapsedTime()<<','<<stage<<','
        <<type.getName()<<','<<(worker?worker->getID():-1)<<','<<tile.x<<','<<tile.y<<','
        <<me->minerals()<<','<<me->gas()<<','<<error<<'\n';
 }
@@ -5287,14 +5300,19 @@ static bool g_v29TerranMech=false; // STARTCRAFT_AI_V29_MECH
 void AIV11Produce(AIV11Counts c) {
     auto& game=BWAPI::Broodwar;
     auto me=game->self();
+    if(!me)return;
     const AIV11Counts nowSupply = AIV11Count();
+    const bool tvp=AIV13OpponentRace()==BWAPI::Races::Protoss;
     const bool depotMissing = me->supplyTotal() < 400 &&
-        me->supplyTotal() - me->supplyUsed() <= 22 &&
+        me->supplyTotal() - me->supplyUsed() <= (tvp?8:22) &&
         nowSupply.unfinishedDepot == 0 &&
         !AIV11PendingBuild(BWAPI::UnitTypes::Terran_Supply_Depot);
     const int reserve=(std::max)((std::max)(g_v11Reserve,g_v28MilitaryMineralReserve),depotMissing?100:0); // STARTCRAFT_AI_V19
     const int frame=game->getFrameCount();
     if(frame%12 || !me)return;
+    // Start Siege before the next Tank spends the same minerals. Research
+    // and Factory training can then progress concurrently.
+    if(tvp)AIV3ResearchSiegeMode();
     // Factory add-ons/production in each idle facility.
     for(auto fact:me->getUnits()){
         if(fact->getType()!=BWAPI::UnitTypes::Terran_Factory || !fact->isCompleted() ||
@@ -5382,9 +5400,19 @@ void AIV11Produce(AIV11Counts c) {
     }
     // Call existing research logic (does not replace proven tank control).
     AIV3ResearchSiegeMode();
+    const int openingBudget=AIV62OpeningBudget(tvp,c.cc,c.scv,c.barracks,c.factory,c.tank,
+        me->hasResearched(BWAPI::TechTypes::Tank_Siege_Mode) ||
+        me->isResearching(BWAPI::TechTypes::Tank_Siege_Mode),me->gas());
+    if(tvp && frame%240==0)AIV353Log("OPENING_BUDGET",BWAPI::UnitTypes::Terran_SCV,
+        nullptr,BWAPI::TilePositions::None,"budget="+std::to_string(openingBudget)+
+        ";workers="+std::to_string(c.scv)+";tanks="+std::to_string(c.tank)+
+        ";factories="+std::to_string(c.factory)+";supply_free="+
+        std::to_string(me->supplyTotal()-me->supplyUsed()));
     for(auto rax:me->getUnits()){
         if(rax->getType()!=BWAPI::UnitTypes::Terran_Barracks || !rax->isCompleted() ||
            rax->isTraining() || me->minerals()<50+reserve)continue;
+        // Keep a minimum screen; beyond it, mech readiness has priority.
+        if(tvp && c.marine>=4 && me->minerals()<openingBudget+50)continue;
         const bool tvz=AIV13OpponentRace()==BWAPI::Races::Zerg;
         const int targetMedics=(std::min)(18,tvz?(c.marine+4)/5:c.marine/6);
         bool canMedic=false;
@@ -6741,6 +6769,12 @@ static bool AIV22ScaleProduction(AIV11Counts c,BWAPI::Race enemy) {
     auto& game=BWAPI::Broodwar;
     auto me=game->self();
     if(!me)return false;
+    if(enemy==BWAPI::Races::Protoss && c.cc==1 &&
+       (c.tank<2 || (!me->hasResearched(BWAPI::TechTypes::Tank_Siege_Mode) &&
+                     !me->isResearching(BWAPI::TechTypes::Tank_Siege_Mode)))) {
+        g_v28GasReserve=0;g_v28MilitaryMineralReserve=0;
+        return false;
+    }
     int targetRax=2,targetFac=2;
     AIV25AdaptiveGoals(enemy,c.completedCC,targetRax,targetFac); // STARTCRAFT_AI_V29_SCALING
     const int now=game->getFrameCount();
@@ -7035,7 +7069,7 @@ void StarterBot::onStart()
 {
     g_v353Tasks.clear();g_v353WatchPreviousFrame=-1;
     AIV353Log("START",BWAPI::UnitTypes::Terran_SCV,nullptr,BWAPI::TilePositions::None);
-    BWAPI::Broodwar->printf("AI v61: single combat owner and natural staging");
+    BWAPI::Broodwar->printf("AI v62: bunker boarding and opening mech priority");
     // Set our BWAPI options here    
 	BWAPI::Broodwar->setLocalSpeed(10);
     BWAPI::Broodwar->setFrameSkip(0);
@@ -8579,7 +8613,8 @@ static void AIV58HoldScreen() {
         // Preserve it until loaded unless the base-breach lock forbids loading.
         auto boarding=u->getLastCommand().getTarget();
         if(game->getFrameCount()>g_v57NoLoadUntil && boarding && boarding->exists() &&
-           boarding->getPlayer()==me && boarding->getType()==BWAPI::UnitTypes::Terran_Bunker)
+           boarding->getPlayer()==me && boarding->getType()==BWAPI::UnitTypes::Terran_Bunker &&
+           game->getFrameCount()-u->getLastCommandFrame()<192)
             continue;
         if(type!=BWAPI::UnitTypes::Terran_Medic && u->getDistance(post)<=320) {
             BWAPI::Unit target=nullptr;int score=10000000;
@@ -8604,8 +8639,15 @@ static void AIV58HoldScreen() {
            anchor->getType()==BWAPI::UnitTypes::Terran_Bunker &&
            game->getFrameCount()>g_v57NoLoadUntil &&
            anchor->getLoadedUnits().size()<4 && u->hasPath(post)) {
-            if(boarding==anchor)continue;
-            if(anchor->load(u))continue;
+            int incoming=0;
+            for(auto ally:me->getUnits())if(ally && ally!=u && ally->exists() &&
+                !ally->isLoaded() && ally->getType()==BWAPI::UnitTypes::Terran_Marine &&
+                ally->getLastCommand().getTarget()==anchor &&
+                game->getFrameCount()-ally->getLastCommandFrame()<192)++incoming;
+            // Command the Marine, not the Bunker. load(marine) updates the
+            // Bunker's command and used to be repeated every frame. Reserve
+            // in-flight slots and retry only after the boarding grace period.
+            if(anchor->getLoadedUnits().size()+incoming<4 && u->rightClick(anchor))continue;
         }
         // Medics support the local line rather than inheriting infantry hold
         // orders, which overwrite healing issued by the abilities controller.
