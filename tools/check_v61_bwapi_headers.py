@@ -55,7 +55,8 @@ extern bool g_v29TerranMech;
 '''
 cpp = prefix + source[source.index('static int g_v56PreviousFrame='):source.index('static bool AIV59CanAdvance(')]
 for result, name in [('int', 'AIV62OpeningBudget'), ('void', 'AIV11TrainWorkers'),
-                     ('void', 'AIV11Produce'), ('bool', 'AIV61OwnsMobile'), ('bool', 'AIV59CanAdvance'),
+                     ('int', 'AIV63SiegeGasReserve'), ('void', 'AIV11Produce'),
+                     ('bool', 'AIV61OwnsMobile'), ('bool', 'AIV59CanAdvance'),
                      ('bool', 'AIV61CanStageNatural'), ('BWAPI::Position', 'AIV59HighGround'),
                      ('int', 'AIV56Progress'), ('BWAPI::Position', 'AIV56PointOnLine'),
                      ('bool', 'AIV56GroundContact'), ('void', 'AIV55PrepareNatural'),

@@ -1,0 +1,34 @@
+{
+  "source_version": 62,
+  "source_sha256": "afbaadd313fbd3c2c0119ad66a5ecf6e8a32a58d82ed3c4e7a03f8bf97311bcd",
+  "adapter_sha256": "693dc9ccbbe62b75a45358ae90bd3ccee9329795694cb430cb9561f6d54bcac5",
+  "runner_sha256": "d7231933bde74bd8cf1aa10aff25d0b50e5ccfe399c1b610aa85b63864f3fe29",
+  "mobile_test_sha256": "e3143f19cb075eaca5f82bf3ed944196ae08a20d3525d6f0bc54a72ee9c0f21b",
+  "seed": 620002,
+  "runs": 1000,
+  "validation_type": "bounded_current_cpp_opening_model_not_engine_matches",
+  "model_start_frame": 3600,
+  "model_deadline_frame": 18000,
+  "core_ready": 978,
+  "core_not_ready_by_deadline": 22,
+  "incomplete_reasons": {
+    "siege_never_started": 22
+  },
+  "milestones_mean_frame": {
+    "factory_frame": 5609.4,
+    "first_tank_frame": 8138.9,
+    "second_tank_frame": 9454.0,
+    "siege_start_frame": 6907.8,
+    "siege_done_frame": 8107.8,
+    "ready_frame": 9498.1
+  },
+  "assumptions": [
+    "Starts after Barracks/Refinery with 14-18 workers and 2-4 Marines, not game start.",
+    "Mineral income is 0.018-0.036 per miner/frame; gas income is assumed.",
+    "Placement/supply scheduling, travel and interruptions are modeled, not the full bot.",
+    "Does not execute the full economy/expansion, scouting, gas assignment or production-scaling directors.",
+    "Up to four worker losses; no enemy army, combat damage, terrain, pathfinding or win condition.",
+    "Budget, worker spending, Factory training and Siege research execute actual extracted current C++."
+  ],
+  "current_mobile_command_checks": "passed"
+}

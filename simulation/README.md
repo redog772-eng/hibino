@@ -8,13 +8,16 @@ records the source, runner, adapter and mobile-test hashes.
 Run from any working directory:
 
 ```bash
-python3 /workspace/hibino/simulation/run_current.py --runs 1000 --seed 620002 --expected-version 62 --output /tmp/hibino-current-1000
+python3 /workspace/hibino/simulation/run_current.py --runs 1000 --seed 620002 --expected-version 63 --output /tmp/hibino-current-1000
 ```
 
 The runner executes actual current `AIV11Count`, `AIV62OpeningBudget`,
 `AIV11TrainWorkers`, `AIV3ResearchSiegeMode` and `AIV11Produce` C++ bodies against
 the bounded resource/queue adapter. It also runs the current mobile controller's
 1,000 randomized command cases and deterministic boarding/fire/healing checks.
+For v63 it includes the actual `AIV63SiegeGasReserve` helper. An explicit
+`--source` path can test a historical release's extracted source; both production
+and mobile checks then use that same source. No checkout reset is needed.
 
 The opening model starts at frame 3,600 with a Barracks, Refinery, 14-18 workers,
 2-4 Marines and variable resources. It varies mineral income, Factory placement
@@ -37,3 +40,7 @@ before comparing results. Raw frame values avoid mixing the construction CSV's
 time scale with replay or wall-clock time.
 
 The older `offline_v52.py` remains a historical model only.
+
+Use `compare_runs.py BASELINE_DIR CANDIDATE_DIR --output comparison.json` for
+paired comparisons. It requires the same adapter, runner, mobile-test hashes,
+seed, scenario count and timing bounds, and checks scenario input fields.

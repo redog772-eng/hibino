@@ -2,9 +2,12 @@
 Not a BWAPI integration test or a StarCraft simulation.
 """
 from pathlib import Path
+import argparse
 import subprocess
 import tempfile
-s=Path('source/StarterBot.cpp').read_text()
+parser=argparse.ArgumentParser()
+parser.add_argument('--source',type=Path,default=Path('source/StarterBot.cpp'))
+s=parser.parse_args().source.read_text()
 body=s[s.index('static void AIV58HoldScreen()'):s.index('void StarterBot::onFrame()')]
 stub=r'''
 #include <vector>

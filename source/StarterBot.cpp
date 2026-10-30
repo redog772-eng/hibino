@@ -3463,7 +3463,7 @@ static void AIV353Log(const char* stage,BWAPI::UnitType type,
     if(!out){game->printf("AI v36.1: construction log unavailable");return;}
     for(char& c:error)if(c==',' || c=='\n' || c=='\r')c=' ';
     if(header)out<<"version,frame,seconds,stage,building,worker,tile_x,tile_y,minerals,gas,error\n";
-    out<<"62,"<<game->getFrameCount()<<','<<game->elapsedTime()<<','<<stage<<','
+    out<<"63,"<<game->getFrameCount()<<','<<game->elapsedTime()<<','<<stage<<','
        <<type.getName()<<','<<(worker?worker->getID():-1)<<','<<tile.x<<','<<tile.y<<','
        <<me->minerals()<<','<<me->gas()<<','<<error<<'\n';
 }
@@ -5297,6 +5297,11 @@ void AIV11BalanceGas() {
 static int g_v28GasReserve=0; // STARTCRAFT_AI_V28_GAS
 static int g_v28MilitaryMineralReserve=0;
 static bool g_v29TerranMech=false; // STARTCRAFT_AI_V29_MECH
+static int AIV63SiegeGasReserve(bool tvp,bool siegeActive,int tanks) {
+    // Keep the first defensive Tank available; reserve research gas against
+    // subsequent Tank/Medic spending once that core defender exists.
+    return tvp && !siegeActive && tanks>=1?150:0;
+}
 void AIV11Produce(AIV11Counts c) {
     auto& game=BWAPI::Broodwar;
     auto me=game->self();
@@ -5394,7 +5399,13 @@ void AIV11Produce(AIV11Counts c) {
                game->canMake(BWAPI::UnitTypes::Terran_Vulture,fact) &&
                fact->train(BWAPI::UnitTypes::Terran_Vulture))continue;
         }
-        if(addon->isCompleted() && me->minerals()>=150+reserve && me->gas()>=100+g_v28GasReserve &&
+        const int siegeGasReserve=AIV63SiegeGasReserve(tvp,
+            me->hasResearched(BWAPI::TechTypes::Tank_Siege_Mode) ||
+            me->isResearching(BWAPI::TechTypes::Tank_Siege_Mode),c.tank);
+        // Trying research first is insufficient while gas is below 150:
+        // repeated 100-gas Tanks can otherwise prevent it ever reaching 150.
+        if(addon->isCompleted() && me->minerals()>=150+reserve &&
+           me->gas()>=100+(std::max)(g_v28GasReserve,siegeGasReserve) &&
            game->canMake(BWAPI::UnitTypes::Terran_Siege_Tank_Tank_Mode,fact))
             fact->train(BWAPI::UnitTypes::Terran_Siege_Tank_Tank_Mode);
     }
@@ -5406,7 +5417,10 @@ void AIV11Produce(AIV11Counts c) {
     if(tvp && frame%240==0)AIV353Log("OPENING_BUDGET",BWAPI::UnitTypes::Terran_SCV,
         nullptr,BWAPI::TilePositions::None,"budget="+std::to_string(openingBudget)+
         ";workers="+std::to_string(c.scv)+";tanks="+std::to_string(c.tank)+
-        ";factories="+std::to_string(c.factory)+";supply_free="+
+        ";factories="+std::to_string(c.factory)+";siege_gas_reserve="+
+        std::to_string(AIV63SiegeGasReserve(tvp,
+            me->hasResearched(BWAPI::TechTypes::Tank_Siege_Mode) ||
+            me->isResearching(BWAPI::TechTypes::Tank_Siege_Mode),c.tank))+";supply_free="+
         std::to_string(me->supplyTotal()-me->supplyUsed()));
     for(auto rax:me->getUnits()){
         if(rax->getType()!=BWAPI::UnitTypes::Terran_Barracks || !rax->isCompleted() ||
@@ -5418,7 +5432,10 @@ void AIV11Produce(AIV11Counts c) {
         bool canMedic=false;
         for(auto academy:me->getUnits())
             if(academy->getType()==BWAPI::UnitTypes::Terran_Academy && academy->isCompleted())canMedic=true;
-        if(canMedic && c.medic<targetMedics && me->gas()>=25 &&
+        const int medicGasReserve=AIV63SiegeGasReserve(tvp,
+            me->hasResearched(BWAPI::TechTypes::Tank_Siege_Mode) ||
+            me->isResearching(BWAPI::TechTypes::Tank_Siege_Mode),c.tank);
+        if(canMedic && c.medic<targetMedics && me->gas()>=25+medicGasReserve &&
            game->canMake(BWAPI::UnitTypes::Terran_Medic,rax)){
             if(rax->train(BWAPI::UnitTypes::Terran_Medic)){++c.medic;continue;}
         }
@@ -7069,7 +7086,7 @@ void StarterBot::onStart()
 {
     g_v353Tasks.clear();g_v353WatchPreviousFrame=-1;
     AIV353Log("START",BWAPI::UnitTypes::Terran_SCV,nullptr,BWAPI::TilePositions::None);
-    BWAPI::Broodwar->printf("AI v62: bunker boarding and opening mech priority");
+    BWAPI::Broodwar->printf("AI v63: reserve siege research gas");
     // Set our BWAPI options here    
 	BWAPI::Broodwar->setLocalSpeed(10);
     BWAPI::Broodwar->setFrameSkip(0);

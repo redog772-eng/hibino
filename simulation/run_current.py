@@ -16,11 +16,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--runs', type=int, default=1000)
 parser.add_argument('--seed', type=int, default=620002)
 parser.add_argument('--expected-version', type=int, required=True)
+parser.add_argument('--source',type=Path,default=ROOT/'source/StarterBot.cpp')
 parser.add_argument('--output', type=Path, required=True)
 args = parser.parse_args()
 if args.runs < 1:
     parser.error('--runs must be positive')
-raw = (ROOT / 'source/StarterBot.cpp').read_bytes()
+raw = args.source.read_bytes()
 source = raw.decode()
 on_start = source[source.index('void StarterBot::onStart()'):source.index('void StarterBot::onFrame()')]
 version = int(re.search(r'printf\("AI v(\d+):', on_start).group(1))
@@ -45,6 +46,8 @@ actual = source[source.index('struct AIV11Counts {'):source.index('static int AI
 for result, name in [('int', 'AIV62OpeningBudget'), ('AIV11Counts', 'AIV11Count'),
                      ('void', 'AIV11TrainWorkers'), ('void', 'AIV3ResearchSiegeMode'),
                      ('void', 'AIV11Produce')]:
+    if name=='AIV11Produce' and 'AIV63SiegeGasReserve(' in source:
+        actual += '\nint ' + function('AIV63SiegeGasReserve') + '\n'
     actual += '\n' + result + ' ' + function(name) + '\n'
 template = (ROOT / 'simulation/current_runtime.cpp').read_text()
 assert template.count('// @ACTUAL_SOURCE@') == 1
@@ -88,7 +91,7 @@ summary = {
     ],
 }
 # Also exercise the actual current mobile controller against its command adapter.
-commands = subprocess.run(['python3','tools/check_v58_hold.py'],cwd=ROOT,capture_output=True,text=True)
+commands = subprocess.run(['python3','tools/check_v58_hold.py','--source',str(args.source.resolve())],cwd=ROOT,capture_output=True,text=True)
 (args.output / 'mobile_checks.txt').write_text(commands.stdout+commands.stderr)
 summary['current_mobile_command_checks'] = 'passed' if commands.returncode==0 else 'failed'
 (args.output / 'summary.json').write_text(json.dumps(summary,indent=2)+'\n')

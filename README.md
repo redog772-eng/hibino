@@ -1,13 +1,21 @@
 # hibino
 히비노
 
-Current-version validation now uses `simulation/run_current.py`, which extracts
-the current production, worker, budget and Siege-research functions and rejects
-a mismatched requested version. See [simulation coverage](simulation/README.md).
-The [v62 1,000-scenario results](simulation/results/current_v62_1000/summary.json)
-record 978 core-ready scenarios and 22 where Siege never started in the bounded
-resource model. These are not engine matches or win-rate results. The failure
-cases and coverage limits are retained in the [review](simulation/results/current_v62_1000/REVIEW.md).
+Current-version validation uses `simulation/run_current.py`, which extracts the
+selected source's actual production, worker, budget and Siege-research functions
+and rejects a mismatched version. See [simulation coverage](simulation/README.md)
+and the latest [v62/v63 paired model review](simulation/results/current_v63_1000/REVIEW.md).
+These are not engine matches or win-rate results.
+
+# STARTcraft AI v63
+
+[Windows installer](releases/STARTcraft_AI_v63_siege_gas_priority.zip): close the game and bots, extract into a new folder, and run `upgrade_ai_v63.cmd`. Verified v54-v62 sources are accepted. Model receipts matching the packaged source are included under `validation/`.
+
+v62 attempted Siege research before Factory production but did not preserve its gas. In the current-source bounded model, recurring Tank purchases prevented Siege from starting in 22/1,000 scenarios. v63 keeps the first defensive Tank available, then requires subsequent Tank and Medic purchases to leave 150 gas until Siege is researched/researching. The reservation releases as soon as research starts. Existing v62 movement ownership, boarding and natural staging are retained.
+
+Same-adapter, same-seed comparison: v62 core readiness 978/1,000; v63 1,000/1,000. First-Tank completion is identical in every paired case. A second seed also gives 1,000/1,000 ready. Readiness is two completed Tanks and completed Siege research by the model deadline, not wins. Terrain, enemy combat and full economy/gas assignment are outside model coverage. Giving research priority can delay later Tanks; the paired mean second-Tank delay is approximately 49 frames.
+
+Validation: 1,000 current-version scenarios per seed, current mobile command cases, `tools/check_v63_siege_budget.py`, existing ownership/advance checks, official BWAPI header syntax checks, and packaged installation/rollback checks with mocked MSBuild. Full Windows linking/build and actual Pluto gameplay remain unverified. The existing construction CSV filename is retained; rows identify **63** and `OPENING_BUDGET` now includes `siege_gas_reserve`.
 
 # STARTcraft AI v62
 
