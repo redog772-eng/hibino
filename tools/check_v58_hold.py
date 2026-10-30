@@ -15,12 +15,15 @@ stub=r'''
 namespace BWAPI {
 struct Position {int x=0,y=0;bool isValid()const{return x>=0&&y>=0;} bool operator!=(Position b)const{return x!=b.x||y!=b.y;}};
 namespace UnitTypes {enum T {Terran_Marine,Terran_Vulture,Terran_Goliath,Terran_Medic,Terran_Command_Center,Terran_Siege_Tank_Siege_Mode,Terran_Bunker};}
-namespace UnitCommandTypes {enum T {Attack_Unit,Move,Hold_Position};}
+namespace UnitCommandTypes {enum T {Attack_Unit,Move,Hold_Position,Use_Tech_Unit};}
+namespace TechTypes {enum T {Healing};}
+struct Type {UnitTypes::T value;operator UnitTypes::T()const{return value;}bool isOrganic()const{return value==UnitTypes::Terran_Marine || value==UnitTypes::Terran_Medic;}bool isBuilding()const{return value==UnitTypes::Terran_Command_Center || value==UnitTypes::Terran_Bunker;}int maxHitPoints()const{return 100;}};
 namespace Races {enum T {Protoss,Terran};}
 struct U; struct P;
-struct Command {UnitCommandTypes::T type=UnitCommandTypes::Attack_Unit;Position pos;U* getTarget()const{return nullptr;}auto getType()const{return type;}auto getTargetPosition()const{return pos;}};
+struct Command {UnitCommandTypes::T type=UnitCommandTypes::Attack_Unit;Position pos;U* target=nullptr;U* getTarget()const{return target;}auto getTechType()const{return TechTypes::Healing;}auto getType()const{return type;}auto getTargetPosition()const{return pos;}};
 struct U {int id=0;UnitTypes::T type=UnitTypes::Terran_Marine;Position pos;bool loaded=false,fly=false,visible=true;Command cmd;int orders=0;
- P* getPlayer(){return nullptr;}bool exists(){return true;}bool isCompleted(){return true;}bool isLoaded(){return loaded;}bool isFlying(){return fly;}auto getType(){return type;}int getID(){return id;}
+ bool attacking=false;int hp=100;bool isAttackFrame(){return attacking;}int getHitPoints(){return hp;}bool useTech(TechTypes::T,U* patient){cmd.type=UnitCommandTypes::Use_Tech_Unit;cmd.target=patient;++orders;return true;}
+ P* getPlayer(){return nullptr;}bool exists(){return true;}bool isCompleted(){return true;}bool isLoaded(){return loaded;}bool isFlying(){return fly;}Type getType(){return {type};}int getID(){return id;}
  int getDistance(Position p){return int(std::hypot(pos.x-p.x,pos.y-p.y));}int getDistance(U* u){return getDistance(u->pos);}Position getPosition(){return pos;}
  bool hasPath(Position){return true;}auto getLastCommand(){return cmd;}
  bool move(Position p){cmd={UnitCommandTypes::Move,p};++orders;return true;}bool holdPosition(){cmd.type=UnitCommandTypes::Hold_Position;++orders;return true;}
@@ -54,6 +57,16 @@ for(int i=0;i<1000;++i){
  marine.loaded=false;marine.type=UnitTypes::Terran_Vulture;g_v55NaturalGuardIds.insert(1);
  AIV58HoldScreen();assert(marine.orders==count);g_v55NaturalGuardIds.clear();
 }
+U medic,patient,tank;
+medic.type=UnitTypes::Terran_Medic;medic.pos={1800,1000};
+patient.pos={1830,1000};patient.hp=35;
+tank.type=UnitTypes::Terran_Siege_Tank_Siege_Mode;tank.pos={1800,1000};
+state.mine.units={&medic,&patient,&tank};state.foe.units.clear();
+AIV58HoldScreen();assert(medic.cmd.type==UnitCommandTypes::Use_Tech_Unit);assert(medic.cmd.target==&patient);
+int count=medic.orders;AIV58HoldScreen();assert(medic.orders==count);
+patient.pos={2300,1000};AIV58HoldScreen();assert(medic.cmd.type==UnitCommandTypes::Hold_Position);
+patient.pos={1800,1000};patient.attacking=true;patient.cmd.type=UnitCommandTypes::Attack_Unit;
+count=patient.orders;AIV58HoldScreen();assert(patient.orders==count);assert(patient.cmd.type==UnitCommandTypes::Attack_Unit);
 }
 '''
 with tempfile.TemporaryDirectory() as d:

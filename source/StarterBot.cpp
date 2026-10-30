@@ -8503,6 +8503,8 @@ static void AIV58HoldScreen() {
         const auto type=u->getType();
         if(type!=BWAPI::UnitTypes::Terran_Marine && type!=BWAPI::UnitTypes::Terran_Vulture &&
            type!=BWAPI::UnitTypes::Terran_Goliath && type!=BWAPI::UnitTypes::Terran_Medic)continue;
+        // Do not cancel the weapon animation with the final staging order.
+        if(u->isAttackFrame())continue;
         // Keep the reserved mine-screen task; its controller uses move/useTech.
         if(type==BWAPI::UnitTypes::Terran_Vulture && g_v55NaturalGuardIds.count(u->getID()))continue;
         BWAPI::Unit anchor=nullptr;int best=10000000;
@@ -8530,6 +8532,25 @@ static void AIV58HoldScreen() {
         if(game->getFrameCount()>g_v57NoLoadUntil && boarding && boarding->exists() &&
            boarding->getPlayer()==me && boarding->getType()==BWAPI::UnitTypes::Terran_Bunker)
             continue;
+        // Medics support the local line rather than inheriting infantry hold
+        // orders, which overwrite healing issued by the abilities controller.
+        if(type==BWAPI::UnitTypes::Terran_Medic && u->getDistance(post)<=160) {
+            BWAPI::Unit patient=nullptr;int missing=0;
+            for(auto ally:me->getUnits()) {
+                if(!ally || !ally->exists() || !ally->isCompleted() || ally->isLoaded() ||
+                   !ally->getType().isOrganic() || ally->getType().isBuilding() ||
+                   ally->getDistance(post)>160 || u->getDistance(ally)>160)continue;
+                const int wound=ally->getType().maxHitPoints()-ally->getHitPoints();
+                if(wound>missing){patient=ally;missing=wound;}
+            }
+            if(patient) {
+                const auto cmd=u->getLastCommand();
+                if(cmd.getType()!=BWAPI::UnitCommandTypes::Use_Tech_Unit ||
+                   cmd.getTarget()!=patient || cmd.getTechType()!=BWAPI::TechTypes::Healing)
+                    u->useTech(BWAPI::TechTypes::Healing,patient);
+                continue;
+            }
+        }
         if(u->getDistance(post)>160 && u->hasPath(post)) {
             const auto cmd=u->getLastCommand();
             if(cmd.getType()!=BWAPI::UnitCommandTypes::Move || cmd.getTargetPosition()!=post)

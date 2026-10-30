@@ -1,6 +1,14 @@
 # hibino
 히비노
 
+# STARTcraft AI v60
+
+[Windows installer](releases/STARTcraft_AI_v60_combat_order_support.zip): close the game and bots, extract, and run `upgrade_ai_v60.cmd`. Verified v54-v59 sources are accepted. Existing v59 log filenames are retained.
+
+The final TvP hold controller now preserves attack-animation frames. Medics near their defensive anchor heal wounded organic allies within 160 pixels of both the anchor and Medic, rather than having their healing overwritten by a hold order. Identical healing commands are preserved; distant casualties do not pull Medics away from the line.
+
+Validation: `python3 tools/check_v58_hold.py` exercises the extracted controller, including attack-frame preservation, healing, repeated commands and distant patients, plus 1,000 existing randomized cases. `python3 tools/check_v60_installer.py` validates the package and historical upgrade acceptance. `python3 tools/check_v59_advance.py` still passes. These component checks do not establish improved match results. Full Windows/BWAPI build and a new Pluto match remain unverified; no current v59 match logs are present in this checkout.
+
 # STARTcraft AI v59
 
 [Windows installer](releases/STARTcraft_AI_v59_high_ground_cover.zip): extract and run `upgrade_ai_v59.cmd`. Accepts verified v54-v58 sources.
