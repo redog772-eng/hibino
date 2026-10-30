@@ -1,6 +1,16 @@
 # hibino
 히비노
 
+# STARTcraft AI v59
+
+[Windows installer](releases/STARTcraft_AI_v59_high_ground_cover.zip): extract and run `upgrade_ai_v59.cmd`. Accepts verified v54-v58 sources.
+
+The natural preparation controller previously sent the first two Tanks forward independently and excluded them from the shared siege controller. v59 removes those movement orders, claims all completed TvP Tanks before legacy controllers, and uses ground height and walkability to choose an initial main-base defense pad. Three Tanks must first assemble in Siege Mode before descent. Each bound requires two nearby sieged cover Tanks, three screen units, no close ground contact, and a sampled walkable segment. Moving Tanks retreat toward cover on close contact instead of immediately sieging. A flat map uses an eligible same-height position. No blanket guarantee is made about engine pathfinding or the quality of every defensive pad.
+
+Latest uploaded construction and breach CSVs each contain two sessions; the latest construction session has 44 rows, one Barracks, and two completed Factories. Pluto's log records `Carrier` and a Pluto win; the opening label alone does not establish which units caused the loss. The replay was received, not played back here.
+
+Validation: `tools/check_v59_advance.py` compiles the actual advance predicate and projection helper: 1,000 randomized cases produced 45 allowed and 955 blocked decisions, passing safety assertions. `tools/check_v58_hold.py` passes 1,000 mobile-screen command-stub cases. These are policy/component tests, not engine matches. Full Windows/BWAPI compilation and real-game formation remain unverified. Logs are `AI_v59_construction.csv`, `AI_v59_breach.csv` and `AI_v59_siege_line.csv`.
+
 Map synchronization launcher: [download](releases/STARTcraft_vs_Pluto_map_sync.zip). Back up `tools/run_arena.ps1` next to your existing `run_STARTcraft_vs_Pluto.cmd`, then replace it with the file from this ZIP. Before launching either game, it copies missing/different `.scx` and `.scm` files from host/maps to pluto/maps at matching relative paths, verifies SHA256, and backs up differing destination files. It deletes no maps. This addresses file mismatches; it does not establish the cause of every in-game map transfer. Archive and static launch-order checks passed; PowerShell/StarCraft execution was unavailable here.
 
 # STARTcraft AI v58

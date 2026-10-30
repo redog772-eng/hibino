@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cmath>
 #include <set>
 #include <map>
 // V32: expansion garrison IDs, shared by attack and siege controllers.
@@ -3431,7 +3432,7 @@ static void AIV353Log(const char* stage,BWAPI::UnitType type,
     auto& game=BWAPI::Broodwar;
     auto me=game->self();if(!me)return;
     const char* dir=R"(C:\Users\User\starcraft-api\STARTcraft\AI_reports)";
-    const char* path=R"(C:\Users\User\starcraft-api\STARTcraft\AI_reports\AI_v58_construction.csv)";
+    const char* path=R"(C:\Users\User\starcraft-api\STARTcraft\AI_reports\AI_v59_construction.csv)";
     _mkdir(dir);
     std::ifstream prior(path,std::ios::binary);
     const bool header=!prior.good() || prior.peek()==std::ifstream::traits_type::eof();
@@ -3440,7 +3441,7 @@ static void AIV353Log(const char* stage,BWAPI::UnitType type,
     if(!out){game->printf("AI v36.1: construction log unavailable");return;}
     for(char& c:error)if(c==',' || c=='\n' || c=='\r')c=' ';
     if(header)out<<"version,frame,seconds,stage,building,worker,tile_x,tile_y,minerals,gas,error\n";
-    out<<"58,"<<game->getFrameCount()<<','<<game->elapsedTime()<<','<<stage<<','
+    out<<"59,"<<game->getFrameCount()<<','<<game->elapsedTime()<<','<<stage<<','
        <<type.getName()<<','<<(worker?worker->getID():-1)<<','<<tile.x<<','<<tile.y<<','
        <<me->minerals()<<','<<me->gas()<<','<<error<<'\n';
 }
@@ -4871,6 +4872,7 @@ static void AIV32DefenseAndWorkers() {
             int actions=0;
             for(auto u:me->getUnits()) {
                 if(!u || !u->exists() || !g_v32GuardIds.count(u->getID()))continue;
+                if(AIV13OpponentRace()==BWAPI::Races::Protoss && AIV7IsTank(u))continue;
                 // v55 owns mine-laying Vultures; retain their army exclusion
                 // without replacing their mine-screen orders here.
                 if(u->getType()==BWAPI::UnitTypes::Terran_Vulture)continue;
@@ -5071,15 +5073,8 @@ static void AIV55PrepareNatural() {
            tank->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode) {
             ++siegedReady;continue;
         }
-        if(tank->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode) {
-            if(tank->getDistance(post)>175)tank->unsiege();
-        } else if(tank->getDistance(post)<=115 &&
-                  me->hasResearched(BWAPI::TechTypes::Tank_Siege_Mode)) {
-            tank->siege();
-        } else if(!tank->isAttackFrame() &&
-                  (tank->isIdle() || now-tank->getLastCommandFrame()>72)) {
-            tank->move(post);
-        }
+        // v59: observation only. The shared siege-line controller owns all
+        // Tank movement, including the natural; never dispatch one alone.
     }
 
     // Siege Mode comes first; Spider Mines follow as the second Machine Shop
@@ -5094,7 +5089,7 @@ static void AIV55PrepareNatural() {
             if(shop->research(mines))break;
         }
     }
-    if(me->hasResearched(mines)) {
+    if(me->hasResearched(mines) && siegedReady>=2) {
         int assigned=0;
         for(auto vulture:me->getUnits()) {
             if(assigned>=2)break;
@@ -7022,7 +7017,7 @@ void StarterBot::onStart()
 {
     g_v353Tasks.clear();g_v353WatchPreviousFrame=-1;
     AIV353Log("START",BWAPI::UnitTypes::Terran_SCV,nullptr,BWAPI::TilePositions::None);
-    BWAPI::Broodwar->printf("AI v58: hold screen and one barracks mech");
+    BWAPI::Broodwar->printf("AI v59: high ground covered tank advance");
     // Set our BWAPI options here    
 	BWAPI::Broodwar->setLocalSpeed(10);
     BWAPI::Broodwar->setFrameSkip(0);
@@ -7371,7 +7366,7 @@ static void AIV23ReactiveDefense() {
     const int desiredPulled=std::min(maxPull,breached?std::max(4,deficit):deficit);
     if(frame%96==0) {
         _mkdir(R"(C:\Users\User\starcraft-api\STARTcraft\AI_reports)");
-        std::ofstream log(R"(C:\Users\User\starcraft-api\STARTcraft\AI_reports\AI_v58_breach.csv)",std::ios::app);
+        std::ofstream log(R"(C:\Users\User\starcraft-api\STARTcraft\AI_reports\AI_v59_breach.csv)",std::ios::app);
         if(log)log<<frame<<','<<threatenedCC->getID()<<','<<breached<<','
                   <<localGroundThreatScore<<','<<localDefenderPower<<','
                   <<desiredPulled<<','<<g_v57NoLoadUntil<<'\n';
@@ -8216,12 +8211,43 @@ static int g_v56LastBound=-10000;
 static int g_v56LastMetrics=-10000;
 static BWAPI::Position g_v56MoveTarget=BWAPI::Positions::None;
 static std::map<int,int> g_v56LastOrder;
+static BWAPI::Position g_v59Ridge=BWAPI::Positions::None;
+static bool g_v59Formed=false;
+
+static bool AIV59CanAdvance(int tanks,int cover,int screen,bool contact,
+                             int gap,bool clearPath) {
+    return tanks>=3 && cover>=2 && screen>=3 && !contact && gap<=320 && clearPath;
+}
+
+static BWAPI::Position AIV59HighGround(BWAPI::Unit tank) {
+    auto& game=BWAPI::Broodwar;
+    const auto start=game->self()->getStartLocation();
+    const BWAPI::Position home(start),rally=AIV25PathRally();
+    const int height=game->getGroundHeight(start);
+    BWAPI::Position best=home;int score=10000000;
+    // Pick a broad walkable pad on the main's elevation near its exit.
+    for(int dx=-480;dx<=480;dx+=32)for(int dy=-480;dy<=480;dy+=32) {
+        BWAPI::Position p(home.x+dx,home.y+dy);
+        if(p.x<64 || p.y<64 || p.x>=game->mapWidth()*32-64 ||
+           p.y>=game->mapHeight()*32-64 ||
+           game->getGroundHeight(BWAPI::TilePosition(p))<height || !tank->hasPath(p))continue;
+        bool clear=true;
+        for(int x=-32;x<=32;x+=16)for(int y=-32;y<=32;y+=16)
+            if(!game->isWalkable((p.x+x)/8,(p.y+y)/8))clear=false;
+        for(auto u:game->getUnitsInRadius(p,96))if(u && u->exists() &&
+            (u->getType().isBuilding() || u->getType().isMineralField()))clear=false;
+        if(!clear)continue;
+        const int cost=(int)p.getDistance(rally.isValid()?rally:home);
+        if(cost<score){score=cost;best=p;}
+    }
+    return best;
+}
 
 static int AIV56Progress(BWAPI::Position p,BWAPI::Position home,
                          BWAPI::Position enemy) {
     if(!p.isValid() || !home.isValid() || !enemy.isValid())return 0;
     const int dx=enemy.x-home.x,dy=enemy.y-home.y;
-    const int norm=(std::max)(1,(std::max)(std::abs(dx),std::abs(dy)));
+    const int norm=(std::max)(1,(int)std::sqrt((double)dx*dx+(double)dy*dy));
     return (int)(((long long)(p.x-home.x)*dx+(long long)(p.y-home.y)*dy)/norm);
 }
 
@@ -8231,7 +8257,7 @@ static BWAPI::Position AIV56PointOnLine(BWAPI::Unit unit,BWAPI::Position home,
     auto& game=BWAPI::Broodwar;
     if(!unit || !home.isValid() || !enemy.isValid())return BWAPI::Positions::None;
     const int dx=enemy.x-home.x,dy=enemy.y-home.y;
-    const int norm=(std::max)(1,(std::max)(std::abs(dx),std::abs(dy)));
+    const int norm=(std::max)(1,(int)std::sqrt((double)dx*dx+(double)dy*dy));
     const int px=-dy,py=dx;
     const int offsets[9]={0,48,-48,88,-88,128,-128,168,-168};
     BWAPI::Position best=BWAPI::Positions::None;int bestScore=10000000;
@@ -8271,6 +8297,8 @@ static void AIV56SiegeLineController() {
     auto& game=BWAPI::Broodwar;auto me=game->self();if(!me)return;
     const int now=game->getFrameCount();
     if(now<g_v56PreviousFrame) {
+        g_v59Ridge=BWAPI::Positions::None;
+        g_v59Formed=false;
         g_v56SiegeLineIds.clear();g_v56LastOrder.clear();
         g_v56MovingTank=-1;g_v56LastBound=g_v56LastMetrics=-10000;
         g_v56MoveTarget=BWAPI::Positions::None;
@@ -8281,26 +8309,40 @@ static void AIV56SiegeLineController() {
     std::vector<BWAPI::Unit> tanks;
     std::set<int> alive;
     for(auto u:me->getUnits())if(u && u->exists() && u->isCompleted() &&
-        AIV7IsTank(u) && !g_v32GuardIds.count(u->getID())) {
+        AIV7IsTank(u) && (AIV13OpponentRace()==BWAPI::Races::Protoss ||
+                         !g_v32GuardIds.count(u->getID()))) {
         tanks.push_back(u);alive.insert(u->getID());
     }
     g_v56SiegeLineIds.swap(alive);
     if(tanks.empty()) {g_v56MovingTank=-1;return;}
 
-    const BWAPI::Position home=AIV33AssemblyPoint();
-    const BWAPI::Position enemy=AIV10AttackTarget();
+    const bool tvp=AIV13OpponentRace()==BWAPI::Races::Protoss;
+    if(tvp && !g_v59Ridge.isValid())g_v59Ridge=AIV59HighGround(tanks.front());
+    const BWAPI::Position home=tvp?g_v59Ridge:AIV33AssemblyPoint();
+    BWAPI::Position enemy=AIV10AttackTarget();
+    if(tvp && !g_v55NaturalPrepared) {
+        const auto tile=AIV16NaturalSite(AIV11BuildWorker());
+        const BWAPI::Position center(tile.x*32+64,tile.y*32+48);
+        enemy=tile.isValid()?AIV55NaturalPost(center,AIV6AttackTarget(),tanks.front(),0,215):
+                             BWAPI::Positions::None;
+    }
     const bool canSiege=me->hasResearched(BWAPI::TechTypes::Tank_Siege_Mode);
-    const bool pushing=g_v7State==AIV7_ATTACK && enemy.isValid() &&
-                       tanks.size()>=2 && canSiege;
+    int formed=0;
+    for(auto tank:tanks)if(tank->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode &&
+        tank->getDistance(home)<=220)++formed;
+    if(formed>=3)g_v59Formed=true;
+    const bool pushing=(g_v7State==AIV7_ATTACK || (tvp && !g_v55NaturalPrepared)) &&
+                       enemy.isValid() && tanks.size()>=3 && canSiege && (!tvp || g_v59Formed);
 
     // Before a coordinated push, form a static line at the current assembly
     // area. A single Tank remains defensive instead of walking out alone.
     if(!pushing) {
         g_v56MovingTank=-1;g_v56MoveTarget=BWAPI::Positions::None;
+        if(tvp && g_v59Formed && g_v55NaturalPrepared)return;
         for(size_t i=0;i<tanks.size();++i) {
             auto tank=tanks[i];
             BWAPI::Position post=home;
-            if(enemy.isValid())post=AIV56PointOnLine(
+            if(!tvp && enemy.isValid())post=AIV56PointOnLine(
                 tank,home,enemy,160,(i%2?1:-1)*(int)(55+45*(i/2)));
             if(!post.isValid())post=home;
             if(tank->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode) {
@@ -8311,7 +8353,8 @@ static void AIV56SiegeLineController() {
             } else if(tank->getDistance(post)>135) {
                 if(now-g_v56LastOrder[tank->getID()]>72 && tank->move(post))
                     g_v56LastOrder[tank->getID()]=now;
-            } else if(canSiege && now-g_v56LastOrder[tank->getID()]>48 && tank->siege())
+            } else if(canSiege && !AIV56GroundContact(tank->getPosition(),192) &&
+                      now-g_v56LastOrder[tank->getID()]>48 && tank->siege())
                 g_v56LastOrder[tank->getID()]=now;
         }
         return;
@@ -8324,6 +8367,7 @@ static void AIV56SiegeLineController() {
     BWAPI::Unit front=tanks.back();
     int frontProgress=AIV56Progress(front->getPosition(),home,enemy);
     int enemyProgress=AIV56Progress(enemy,home,enemy);
+    const int standOff=tvp && !g_v55NaturalPrepared?0:420;
     int sieged=0;
     for(auto tank:tanks)
         if(tank->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode)++sieged;
@@ -8336,7 +8380,17 @@ static void AIV56SiegeLineController() {
     if(!moving){g_v56MovingTank=-1;g_v56MoveTarget=BWAPI::Positions::None;}
     if(moving) {
         const int id=moving->getID();
-        const bool danger=AIV56GroundContact(moving->getPosition(),430);
+        const bool danger=AIV56GroundContact(moving->getPosition(),192);
+        if(danger && moving->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Tank_Mode) {
+            // A Zealot closing on a moving Tank is a retreat signal, not a
+            // request to immobilize the isolated Tank in front of it.
+            BWAPI::Position cover=home;int distance=10000000;
+            for(auto ally:tanks)if(ally!=moving &&
+                ally->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode &&
+                moving->getDistance(ally)<distance){distance=moving->getDistance(ally);cover=ally->getPosition();}
+            moving->move(cover);g_v56MoveTarget=cover;g_v56LastOrder[id]=now;
+            return;
+        }
         if(moving->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode) {
             if(moving->getDistance(g_v56MoveTarget)<=125 || danger) {
                 g_v56MovingTank=-1;g_v56MoveTarget=BWAPI::Positions::None;
@@ -8354,22 +8408,51 @@ static void AIV56SiegeLineController() {
     for(auto tank:tanks) {
         if(tank->getID()==g_v56MovingTank ||
            tank->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode)continue;
-        if(now-g_v56LastOrder[tank->getID()]>48 && tank->siege())
+        BWAPI::Unit cover=nullptr;int distance=10000000;
+        for(auto ally:tanks)if(ally!=tank &&
+            ally->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode &&
+            tank->getDistance(ally)<distance){cover=ally;distance=tank->getDistance(ally);}
+        if((cover && distance>220) || AIV56GroundContact(tank->getPosition(),192)) {
+            if(now-g_v56LastOrder[tank->getID()]>24 &&
+               tank->move(cover?cover->getPosition():home))g_v56LastOrder[tank->getID()]=now;
+            continue;
+        }
+        if(!AIV56GroundContact(tank->getPosition(),192) &&
+           now-g_v56LastOrder[tank->getID()]>48 && tank->siege())
             g_v56LastOrder[tank->getID()]=now;
     }
 
     // Start one short leapfrog bound only when the rest of the line is fully
     // deployed and no enemy is close enough to be baiting the formation.
     if(g_v56MovingTank<0 && !contact && sieged==(int)tanks.size() &&
-       now-g_v56LastBound>=192 && frontProgress<enemyProgress-420) {
+       now-g_v56LastBound>=192 && (frontProgress<enemyProgress-standOff ||
+       (tvp && !g_v55NaturalPrepared &&
+        AIV56Progress(tanks.front()->getPosition(),home,enemy)<enemyProgress-64))) {
         BWAPI::Unit rear=nullptr;
         for(auto tank:tanks)if(tank!=front &&
             tank->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode){rear=tank;break;}
         if(rear) {
-            const int nextProgress=(std::min)(enemyProgress-420,frontProgress+185);
-            const int side=(rear->getID()%2?80:-80);
+            const int nextProgress=(std::min)(enemyProgress-standOff,frontProgress+128);
+            const auto frontPos=front->getPosition();
+            const long long lateral=(long long)(frontPos.y-home.y)*(enemy.x-home.x)-
+                                    (long long)(frontPos.x-home.x)*(enemy.y-home.y);
+            const int side=lateral>=0?-80:80;
             BWAPI::Position target=AIV56PointOnLine(rear,home,enemy,nextProgress,side);
-            if(target.isValid()) {
+            int covers=0,screen=0,gap=10000000;bool clearPath=target.isValid();
+            if(clearPath) {
+                for(auto ally:tanks)if(ally!=rear &&
+                    ally->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode &&
+                    ally->getDistance(target)<=320 && ally->getDistance(rear)<=320)++covers;
+                gap=(int)front->getDistance(target);
+                for(auto u:me->getUnits())if(u && u->exists() && u->isCompleted() && !u->isLoaded() &&
+                    (u->getType()==BWAPI::UnitTypes::Terran_Marine ||
+                     u->getType()==BWAPI::UnitTypes::Terran_Vulture ||
+                     u->getType()==BWAPI::UnitTypes::Terran_Goliath) && u->getDistance(front)<=256)++screen;
+                const auto p=rear->getPosition();
+                for(int k=1;k<=16;++k)if(!game->isWalkable(
+                    (p.x+(target.x-p.x)*k/16)/8,(p.y+(target.y-p.y)*k/16)/8))clearPath=false;
+            }
+            if(AIV59CanAdvance((int)tanks.size(),covers,screen,contact,gap,clearPath)) {
                 g_v56MovingTank=rear->getID();g_v56MoveTarget=target;g_v56LastBound=now;
                 if(rear->unsiege())g_v56LastOrder[rear->getID()]=now;
             }
@@ -8399,7 +8482,7 @@ static void AIV56SiegeLineController() {
         const bool firstMetrics=g_v56LastMetrics<0;
         g_v56LastMetrics=now;
         _mkdir(R"(C:\Users\User\starcraft-api\STARTcraft\AI_reports)");
-        std::ofstream out(R"(C:\Users\User\starcraft-api\STARTcraft\AI_reports\AI_v56_siege_line.csv)",
+        std::ofstream out(R"(C:\Users\User\starcraft-api\STARTcraft\AI_reports\AI_v59_siege_line.csv)",
                           firstMetrics?std::ios::trunc:std::ios::app);
         if(out) {
             if(firstMetrics)out<<"frame,seconds,tanks,sieged,moving,contact,front_progress,leashed\n";
@@ -8458,6 +8541,13 @@ static void AIV58HoldScreen() {
 
 void StarterBot::onFrame()
 {
+    // Claim newly completed TvP Tanks before any legacy controller can order
+    // an attack, unsiege, or traffic detour in this frame.
+    if(AIV13OpponentRace()==BWAPI::Races::Protoss) {
+        g_v56SiegeLineIds.clear();
+        for(auto u:BWAPI::Broodwar->self()->getUnits())
+            if(u && u->exists() && u->isCompleted() && AIV7IsTank(u))g_v56SiegeLineIds.insert(u->getID());
+    }
     AIV353WatchBuilds();
     AIV18Dashboard(); // STARTCRAFT_AI_V18
     AIV19Diagnostics(); // STARTCRAFT_AI_V19
