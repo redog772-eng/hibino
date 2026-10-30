@@ -3431,7 +3431,7 @@ static void AIV353Log(const char* stage,BWAPI::UnitType type,
     auto& game=BWAPI::Broodwar;
     auto me=game->self();if(!me)return;
     const char* dir=R"(C:\Users\User\starcraft-api\STARTcraft\AI_reports)";
-    const char* path=R"(C:\Users\User\starcraft-api\STARTcraft\AI_reports\AI_v57_construction.csv)";
+    const char* path=R"(C:\Users\User\starcraft-api\STARTcraft\AI_reports\AI_v58_construction.csv)";
     _mkdir(dir);
     std::ifstream prior(path,std::ios::binary);
     const bool header=!prior.good() || prior.peek()==std::ifstream::traits_type::eof();
@@ -3440,7 +3440,7 @@ static void AIV353Log(const char* stage,BWAPI::UnitType type,
     if(!out){game->printf("AI v36.1: construction log unavailable");return;}
     for(char& c:error)if(c==',' || c=='\n' || c=='\r')c=' ';
     if(header)out<<"version,frame,seconds,stage,building,worker,tile_x,tile_y,minerals,gas,error\n";
-    out<<"57,"<<game->getFrameCount()<<','<<game->elapsedTime()<<','<<stage<<','
+    out<<"58,"<<game->getFrameCount()<<','<<game->elapsedTime()<<','<<stage<<','
        <<type.getName()<<','<<(worker?worker->getID():-1)<<','<<tile.x<<','<<tile.y<<','
        <<me->minerals()<<','<<me->gas()<<','<<error<<'\n';
 }
@@ -3649,6 +3649,10 @@ bool AIV11BuildNear(BWAPI::UnitType type, BWAPI::TilePosition desired=BWAPI::Til
     auto me=game->self();
     if(!me || me->minerals()<type.mineralPrice() || me->gas()<type.gasPrice() ||
        AIV11PendingBuild(type))return false;
+    // Every production caller must obey the one-Barracks TvP plan.
+    if(type==BWAPI::UnitTypes::Terran_Barracks &&
+       AIV13OpponentRace()==BWAPI::Races::Protoss)
+        for(auto u:me->getUnits())if(u && u->exists() && u->getType()==type)return false;
     // A requested defensive pad needs the nearest suitable SCV.  Choosing an
     // arbitrary main-base worker made accepted natural-turret orders time out
     // before construction started.
@@ -5654,16 +5658,7 @@ static void AIV25AdaptiveGoals(BWAPI::Race enemy,int bases,int& rax,int& fac) {
         else if(spire){g_v28PlanLabel="TvZ BIONIC AIR";rax=multi?6:4;fac=multi?2:1;}
         else {g_v28PlanLabel="TvZ BIONIC";rax=multi?6:4;fac=multi?2:1;}
     }else if(enemy==BWAPI::Races::Protoss){
-        bool zealot=AIV25RecentArmy(BWAPI::UnitTypes::Protoss_Zealot)>=5;
-        bool robo=AIV25Seen(BWAPI::UnitTypes::Protoss_Robotics_Facility)>0;
-        bool air=AIV25Seen(BWAPI::UnitTypes::Protoss_Stargate)>0;
-        if(air){g_v28PlanLabel="TvP BIONIC AIR";rax=multi?4:3;fac=multi?5:3;}
-        else if(zealot && !robo){g_v28PlanLabel="TvP BIONIC";rax=multi?4:3;fac=multi?4:3;}
-        else {
-            // One base cannot fund three Factories, continuous units and a
-            // safe natural. Hold at two until the expansion actually finishes.
-            g_v28PlanLabel="TvP MECH";rax=multi?3:2;fac=multi?5:2;
-        }
+        g_v28PlanLabel="TvP MECH ONE RAX";rax=1;fac=multi?5:2;
     }else if(enemy==BWAPI::Races::Terran){
         bool enemyBio=AIV25Seen(BWAPI::UnitTypes::Terran_Barracks)>=3 &&
                       AIV25Seen(BWAPI::UnitTypes::Terran_Factory)==0;
@@ -6741,6 +6736,7 @@ static bool AIV22ScaleProduction(AIV11Counts c,BWAPI::Race enemy) {
     // production after the army is functional, the natural is ready, or the
     // match has moved beyond the initial opening.
     const bool openingReady=c.completedCC>=2 ||
+                            (enemy==BWAPI::Races::Protoss && c.factory>=1) ||
                             g_v7State==AIV7_ATTACK ||
                             game->elapsedTime()>=420 || (g_v29TerranMech && c.scv>=22 && c.tank>=1);
     if(c.scv<18 || c.barracks==0 || !openingReady){
@@ -6749,7 +6745,8 @@ static bool AIV22ScaleProduction(AIV11Counts c,BWAPI::Race enemy) {
     // STARTCRAFT_AI_V30_EXPANSION_PRIORITY: v29 constantly bought military
     // buildings before 400 minerals could be accumulated for the natural.
     // Don't steal the CC fund. Normal v13 production remains behind the reserve.
-    if(c.cc==1 && c.scv>=22 && c.tank>=1 &&
+    if(!(enemy==BWAPI::Races::Protoss && c.factory<2) &&
+       c.cc==1 && c.scv>=22 && c.tank>=1 &&
        !AIV6HomeThreat().isValid() && now>=g_v11NoExpansionUntil &&
        me->minerals()<400){
         g_v28GasReserve=0;
@@ -7025,7 +7022,7 @@ void StarterBot::onStart()
 {
     g_v353Tasks.clear();g_v353WatchPreviousFrame=-1;
     AIV353Log("START",BWAPI::UnitTypes::Terran_SCV,nullptr,BWAPI::TilePositions::None);
-    BWAPI::Broodwar->printf("AI v57: bunker breach emergency defense");
+    BWAPI::Broodwar->printf("AI v58: hold screen and one barracks mech");
     // Set our BWAPI options here    
 	BWAPI::Broodwar->setLocalSpeed(10);
     BWAPI::Broodwar->setFrameSkip(0);
@@ -7374,7 +7371,7 @@ static void AIV23ReactiveDefense() {
     const int desiredPulled=std::min(maxPull,breached?std::max(4,deficit):deficit);
     if(frame%96==0) {
         _mkdir(R"(C:\Users\User\starcraft-api\STARTcraft\AI_reports)");
-        std::ofstream log(R"(C:\Users\User\starcraft-api\STARTcraft\AI_reports\AI_v57_breach.csv)",std::ios::app);
+        std::ofstream log(R"(C:\Users\User\starcraft-api\STARTcraft\AI_reports\AI_v58_breach.csv)",std::ios::app);
         if(log)log<<frame<<','<<threatenedCC->getID()<<','<<breached<<','
                   <<localGroundThreatScore<<','<<localDefenderPower<<','
                   <<desiredPulled<<','<<g_v57NoLoadUntil<<'\n';
@@ -7710,6 +7707,7 @@ static BWAPI::Position AIV37Retreat(BWAPI::Unit u,BWAPI::Unit enemy,int distance
 }
 static void AIV37HighApmMicro(){
     auto& game=BWAPI::Broodwar;auto me=game->self();if(!me)return;
+    if(AIV13OpponentRace()==BWAPI::Races::Protoss)return;
     int frame=game->getFrameCount();
     if(frame<g_v37PreviousFrame)g_v37LastOrder.clear();g_v37PreviousFrame=frame;
     if(frame%4)return;
@@ -8139,6 +8137,7 @@ static std::set<int> g_v373PressureUnits;
 static void AIV373EnemyExpansionResponse() {
     auto& game=BWAPI::Broodwar;auto me=game->self();
     if(!me || me->getRace()!=BWAPI::Races::Terran)return;
+    if(AIV13OpponentRace()==BWAPI::Races::Protoss){g_v373PressureUnits.clear();return;}
     const int now=game->getFrameCount();
     if(now<g_v373PreviousFrame) {
         g_v373EnemyDepotCount=0;g_v373PressureTarget=BWAPI::Positions::None;
@@ -8411,6 +8410,52 @@ static void AIV56SiegeLineController() {
     }
 }
 
+// Final TvP command owner: move to friendly anchors and hold. Never issue an
+// attack-unit or attack-move command that can follow a retreating enemy.
+static void AIV58HoldScreen() {
+    auto& game=BWAPI::Broodwar;auto me=game->self();
+    if(!me || AIV13OpponentRace()!=BWAPI::Races::Protoss)return;
+    for(auto u:me->getUnits()) {
+        if(!u || !u->exists() || !u->isCompleted() || u->isLoaded())continue;
+        const auto type=u->getType();
+        if(type!=BWAPI::UnitTypes::Terran_Marine && type!=BWAPI::UnitTypes::Terran_Vulture &&
+           type!=BWAPI::UnitTypes::Terran_Goliath && type!=BWAPI::UnitTypes::Terran_Medic)continue;
+        // Keep the reserved mine-screen task; its controller uses move/useTech.
+        if(type==BWAPI::UnitTypes::Terran_Vulture && g_v55NaturalGuardIds.count(u->getID()))continue;
+        BWAPI::Unit anchor=nullptr;int best=10000000;
+        // A breached base takes precedence over the forward siege line.
+        for(auto cc:me->getUnits())if(cc && cc->exists() && !cc->isFlying() &&
+            cc->getType()==BWAPI::UnitTypes::Terran_Command_Center && u->getDistance(cc)<1200) {
+            bool breach=false;
+            for(auto ep:game->enemies())for(auto e:ep->getUnits())
+                if(AIV23VisibleThreat(e) && !e->isFlying() && e->getDistance(cc)<460)breach=true;
+            if(breach && u->getDistance(cc)<best){anchor=cc;best=u->getDistance(cc);}
+        }
+        if(!anchor)for(auto ally:me->getUnits()) {
+            if(!ally || !ally->exists() || !ally->isCompleted() || ally->isFlying())continue;
+            const auto t=ally->getType();
+            if(t!=BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode &&
+               t!=BWAPI::UnitTypes::Terran_Bunker)continue;
+            const int d=u->getDistance(ally);
+            if(d<best){anchor=ally;best=d;}
+        }
+        BWAPI::Position post=anchor?anchor->getPosition():AIV33AssemblyPoint();
+        if(!post.isValid())continue;
+        // Boarding a friendly bunker is a defensive order, not a pursuit.
+        // Preserve it until loaded unless the base-breach lock forbids loading.
+        auto boarding=u->getLastCommand().getTarget();
+        if(game->getFrameCount()>g_v57NoLoadUntil && boarding && boarding->exists() &&
+           boarding->getPlayer()==me && boarding->getType()==BWAPI::UnitTypes::Terran_Bunker)
+            continue;
+        if(u->getDistance(post)>160 && u->hasPath(post)) {
+            const auto cmd=u->getLastCommand();
+            if(cmd.getType()!=BWAPI::UnitCommandTypes::Move || cmd.getTargetPosition()!=post)
+                u->move(post);
+        } else if(u->getLastCommand().getType()!=BWAPI::UnitCommandTypes::Hold_Position)
+            u->holdPosition();
+    }
+}
+
 void StarterBot::onFrame()
 {
     AIV353WatchBuilds();
@@ -8485,6 +8530,7 @@ void StarterBot::onFrame()
     AIV34FlowLog(); // STARTCRAFT_AI_V34
     AIV56SiegeLineController(); // STARTCRAFT_AI_V56: final combat-order owner
     AIV23ReactiveDefense(); // v57 emergency infantry/SCV orders follow staging/loading.
+    AIV58HoldScreen(); // final: emergency support must not turn into pursuit.
     AIV353WatchBuilds();
 }
 

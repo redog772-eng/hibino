@@ -1,6 +1,18 @@
 # hibino
 히비노
 
+# STARTcraft AI v58
+
+[Windows installer](releases/STARTcraft_AI_v58_hold_screen_one_barracks.zip). Extract into a new folder, close the game and bots, and run `upgrade_ai_v58.cmd`. Verified v54 through v57.1 installations are supported.
+
+TvP now keeps one Barracks and targets two Factories on one base, five after expansion. The build dispatcher also rejects additional Barracks so alternate production callers cannot bypass this rule. Factory scaling becomes eligible after the first Factory and no longer waits for the 420-second timing; worker and resource requirements still apply.
+
+The direct-target micro and six-Marine expansion raid are disabled in TvP. The final mobile-unit controller moves Marines, Vultures, Goliaths and Medics to friendly bunker/sieged-Tank positions and holds there. A breached nearby Command Center takes priority. Bunker boarding and reserved mine-laying remain supported. Tank movement retains the existing siege controller. No claim is made that the whole army is immobile or that the previous Tank controller is fully validated.
+
+The uploaded v57 construction log records a second Barracks accepted at 426 seconds, then a Factory ordered at 435 seconds on the same tile (53,114). The Barracks starts at 438 seconds and the Factory times out at 480 seconds. The replay was received but not played back here.
+
+Validation: `python3 tools/check_v58_hold.py` compiles the actual hold-controller body against a small command-recording stub and checks 1,000 randomized positions, including breach return, loaded units and reserved mine layers. These are command tests, not StarCraft matches or a win-rate model. `python3 tools/check_v58_installer.py` checks upgrade acceptance, unknown-source rejection and source integrity. Full Windows/BWAPI compilation and actual gameplay remain to be verified. New logs: `AI_v58_construction.csv` and `AI_v58_breach.csv`.
+
 # STARTcraft AI v57
 
 [Windows installer v57.1](releases/STARTcraft_AI_v57_1_compile_fix.zip): extract and run `upgrade_ai_v57.cmd` with StarCraft and bots closed. Verified v54, v55, v56 and original v57 sources are accepted directly. v57.1 adds the missing forward declaration for `AIV25Seen`, fixing MSVC C3861 and its cascading C2737 error reported in the uploaded build log. The gameplay rules are unchanged.
