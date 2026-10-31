@@ -34,16 +34,17 @@ def window_ini(text, values):
     return ''.join(out)
 
 
-def configure(root, mode='Windowed'):
+def configure(root, mode='Windowed', width=640, height=480, left=0, top=0):
+    if width<640 or height<480:raise ValueError('Window dimensions must be at least 640x480')
     arena=root/'arena/STARTcraft_vs_Pluto';changes=[]
-    for runtime,left in [('host',0),('pluto',680)]:
+    for runtime,offset in [('host',0),('pluto',width+40 if mode=='Windowed' else 0)]:
         path=arena/runtime/'bwapi-data/bwapi.ini'
         original=path.read_bytes() # Preflight both files before changing either.
         encoding='utf-16' if original.startswith((b'\xff\xfe',b'\xfe\xff')) else (
             'utf-8-sig' if original.startswith(b'\xef\xbb\xbf') else 'utf-8')
         try:text=original.decode(encoding)
         except UnicodeDecodeError:encoding='cp1252';text=original.decode(encoding)
-        values={'windowed':'ON' if mode=='Windowed' else 'OFF','left':left,'top':0,'width':640,'height':480}
+        values={'windowed':'OFF' if mode=='Fullscreen' else 'ON','left':left+offset,'top':top,'width':width,'height':height}
         updated=window_ini(text,values).encode(encoding)
         changes.append((runtime,path,original,updated))
     backup=arena/'window_backups'/uuid.uuid4().hex
@@ -52,12 +53,16 @@ def configure(root, mode='Windowed'):
         destination=backup/runtime/'bwapi.ini';destination.parent.mkdir(parents=True,exist_ok=True)
         shutil.copy2(path,destination)
         temporary=path.with_suffix('.ini.windowtmp');temporary.write_bytes(updated);temporary.replace(path)
-    print(f'Both BWAPI runtimes configured: {mode}; host=(0,0), Pluto=(680,0), client=640x480')
+    print(f'Both BWAPI runtimes configured: {mode}; client={width}x{height}')
     if backup.exists():print('Original INI backups:',backup)
 
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
     parser.add_argument('--root',type=Path,required=True)
-    parser.add_argument('--mode',choices=['Windowed','Fullscreen'],default='Windowed')
-    args=parser.parse_args();configure(args.root,args.mode)
+    parser.add_argument('--mode',choices=['Borderless','Windowed','Fullscreen'],default='Windowed')
+    parser.add_argument('--width',type=int,default=640)
+    parser.add_argument('--height',type=int,default=480)
+    parser.add_argument('--left',type=int,default=0)
+    parser.add_argument('--top',type=int,default=0)
+    args=parser.parse_args();configure(args.root,args.mode,args.width,args.height,args.left,args.top)

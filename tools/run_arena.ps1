@@ -1,5 +1,5 @@
 param([string]$Root = 'C:\Users\User\starcraft-api\STARTcraft',
-      [ValidateSet('Windowed','Fullscreen')][string]$WindowMode = 'Windowed')
+      [ValidateSet('Borderless','Windowed','Fullscreen')][string]$WindowMode = 'Borderless')
 
 $ErrorActionPreference = 'Stop'
 $arenaRoot = Join-Path $Root 'arena\STARTcraft_vs_Pluto'
@@ -20,11 +20,11 @@ function Start-BwapiGame([string]$Runtime, [int]$Left) {
     $info.UseShellExecute = $false
     # Official BWAPI 4.4.0 Config.cpp honors these before INI values. Scope
     # them to this injector/game, including the second process's position.
-    $info.EnvironmentVariables['BWAPI_CONFIG_WINDOW__WINDOWED'] = $(if ($WindowMode -eq 'Windowed') { 'ON' } else { 'OFF' })
+    $info.EnvironmentVariables['BWAPI_CONFIG_WINDOW__WINDOWED'] = $(if ($WindowMode -eq 'Fullscreen') { 'OFF' } else { 'ON' })
     $info.EnvironmentVariables['BWAPI_CONFIG_WINDOW__LEFT'] = [string]$Left
-    $info.EnvironmentVariables['BWAPI_CONFIG_WINDOW__TOP'] = '0'
-    $info.EnvironmentVariables['BWAPI_CONFIG_WINDOW__WIDTH'] = '640'
-    $info.EnvironmentVariables['BWAPI_CONFIG_WINDOW__HEIGHT'] = '480'
+    $info.EnvironmentVariables['BWAPI_CONFIG_WINDOW__TOP'] = [string]$windowTop
+    $info.EnvironmentVariables['BWAPI_CONFIG_WINDOW__WIDTH'] = [string]$windowWidth
+    $info.EnvironmentVariables['BWAPI_CONFIG_WINDOW__HEIGHT'] = [string]$windowHeight
     [Diagnostics.Process]::Start($info) | Out-Null
 }
 
@@ -77,7 +77,19 @@ try {
     Require-File (Join-Path $guestRoot 'bwapi-data\AI\pluto\pluto_weights.bin')
     $windowHelper = Join-Path $PSScriptRoot 'configure_arena_windows.py'
     Require-File $windowHelper
-    & python $windowHelper --root $Root --mode $WindowMode
+    $windowWidth = 640; $windowHeight = 480; $windowLeft = 0; $windowTop = 0
+    $guestLeft = 680
+    if ($WindowMode -eq 'Borderless') {
+        $displayHelper = Join-Path $PSScriptRoot 'arena_display.ps1'
+        Require-File $displayHelper
+        . $displayHelper
+        Initialize-ArenaDisplay
+        $screenBounds = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+        $windowWidth = $screenBounds.Width; $windowHeight = $screenBounds.Height
+        $windowLeft = $screenBounds.X; $windowTop = $screenBounds.Y
+        $guestLeft = $windowLeft
+    }
+    & python $windowHelper --root $Root --mode $WindowMode --width $windowWidth --height $windowHeight --left $windowLeft --top $windowTop
     if ($LASTEXITCODE -ne 0) { throw 'Could not configure matching window modes.' }
     Sync-ArenaMaps
 
@@ -88,15 +100,16 @@ try {
     if (-not (Get-Process -Name StarterBot -ErrorAction SilentlyContinue)) { throw 'StarterBot exited before Pluto was launched.' }
 
     Write-Host 'Launching the StarCraft instance that STARTcraft will control...'
-    Start-BwapiGame $hostRoot 0
+    Start-BwapiGame $hostRoot $windowLeft
     Start-Sleep -Seconds 5
     if (-not (Get-Process -Name StarCraft -ErrorAction SilentlyContinue)) { throw 'STARTcraft StarCraft process did not start.' }
     if (-not (Get-Process -Name StarterBot -ErrorAction SilentlyContinue)) { throw 'StarterBot could not attach to the STARTcraft BWAPI instance.' }
 
     Write-Host 'Launching Pluto opponent...'
-    Start-BwapiGame $guestRoot 680
+    Start-BwapiGame $guestRoot $guestLeft
     Start-Sleep -Seconds 3
     if (@(Get-Process -Name StarCraft -ErrorAction SilentlyContinue).Count -lt 2) { throw 'The second StarCraft process did not start.' }
+    if ($WindowMode -eq 'Borderless') { Set-ArenaBorderless @($hostRoot, $guestRoot) $screenBounds }
 
     Write-Host 'SUCCESS: STARTcraft vs Pluto match is starting.'
     Write-Host "Requested display mode for BOTH instances: $WindowMode"

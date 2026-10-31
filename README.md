@@ -9,6 +9,11 @@ These are not engine matches or win-rate results.
 
 # STARTcraft AI v66
 
+**Display correction:** [large window launcher](releases/STARTcraft_large_window_fix.zip).
+Close games/bots, extract into a new folder and run its `run_STARTcraft_vs_Pluto.cmd`.
+Both games use monitor-sized borderless windows; switch with Alt+Tab. No AI
+reinstallation is needed. INI backups are retained. Windows live display is unverified.
+
 [Windows package](releases/STARTcraft_AI_v66_air_expansion_windows.zip): extract into a new folder, close games/bots, run `upgrade_ai_v66.cmd`, then use **this package's** `run_STARTcraft_vs_Pluto.cmd`. Both games default to windowed mode; the new launcher backs up both INIs and applies matching process-specific BWAPI settings. Previously extracted launchers remain unchanged.
 
 The [uploaded v65 review](simulation/results/pluto_v65_review.md) confirms movement recovery without a working natural. v66 can build a separate CC at home, fly to a mineral cluster (including gasless or ground-blocked sites), land and train local SCVs. It requires four workers gathering/carrying local minerals before recording activation. Threats or stalled commands trigger another site or a return; the original main CC is never assigned this task.

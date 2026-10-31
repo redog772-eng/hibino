@@ -30,8 +30,18 @@ with tempfile.TemporaryDirectory() as directory:
     backups=list(root.rglob('window_backups/*'))
     assert len(backups)==1
     configure(root);assert len(list(root.rglob('window_backups/*')))==1
+    for width,height in [(1920,1080),(2560,1440),(3840,2160)]:
+        configure(root,'Borderless',width,height)
+        for runtime in ['host','pluto']:
+            text=(root/'arena/STARTcraft_vs_Pluto'/runtime/'bwapi-data/bwapi.ini').read_text()
+            assert f'width = {width}' in text and f'height = {height}' in text
+            assert 'windowed = ON' in text and 'left = 0' in text and 'ai = custom.dll' in text
+    configure(root,'Fullscreen')
+    assert 'windowed = OFF' in (root/'arena/STARTcraft_vs_Pluto/host/bwapi-data/bwapi.ini').read_text()
 ps=Path('tools/run_arena.ps1').read_text()
 assert "'BWAPI_CONFIG_WINDOW__WINDOWED'" in ps
-assert 'Start-BwapiGame $hostRoot 0' in ps and 'Start-BwapiGame $guestRoot 680' in ps
+assert 'Start-BwapiGame $hostRoot $windowLeft' in ps and 'Start-BwapiGame $guestRoot $guestLeft' in ps
+assert "[string]$WindowMode = 'Borderless'" in ps
+assert 'PrimaryScreen.Bounds' in ps and 'Set-ArenaBorderless @($hostRoot, $guestRoot)' in ps
 assert 'Disable-WindowMode' not in ps
 print('PASS: matching window settings, duplicate/missing keys, preservation, backup and repeatability; Windows GUI unrun')

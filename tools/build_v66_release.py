@@ -44,7 +44,7 @@ def main():
     path=Path('releases/STARTcraft_AI_v66_air_expansion_windows.zip')
     with zipfile.ZipFile(path,'w') as archive:
         for name,data in [('source/StarterBot.cpp',source),('install_ai_v66.py',installer.encode()),('upgrade_ai_v66.cmd',command.encode()),('README_KO.txt',Path('releases/README_v66_KO.txt').read_bytes())]:add_file(archive,name,data)
-        for file in ['run_arena.ps1','configure_arena_windows.py']:
+        for file in ['run_arena.ps1','configure_arena_windows.py','arena_display.ps1']:
             add_file(archive,'tools/'+file,Path('tools',file).read_bytes())
         add_file(archive,'run_STARTcraft_vs_Pluto.cmd',Path('tools/run_STARTcraft_vs_Pluto.cmd').read_bytes())
         for name,data,_ in receipts:add_file(archive,'validation/'+name+'.json',data)
