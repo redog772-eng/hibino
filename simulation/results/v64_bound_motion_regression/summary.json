@@ -1,0 +1,22 @@
+{
+  "source_sha256": "f5de4bff9163c14cd4eb1014f03403147c6f73d5fcb0bb57ae6bde246bda35a1",
+  "runner_sha256": "734509fee3b16649d17302f95685d143ae97888a98dba7ff7cf4cc0a2d42a7f5",
+  "runs": 1000,
+  "seed": 650001,
+  "ownership_released": 375,
+  "handler": "historical_extracted_inline_block",
+  "unsafe_or_unbounded": 625,
+  "max_release_frame": 240,
+  "expected_settle_failures_handled": 0,
+  "scope": "actual bound handler with approximate motion/blockers and delayed Siege; not full engine/pathfinder/formation",
+  "kinds": [
+    "normal",
+    "permanent_landing_block",
+    "ground_contact",
+    "slow_progress_deadline",
+    "Siege_command_failure",
+    "unit_lost",
+    "no_cover_retreat_rejected",
+    "temporary_block"
+  ]
+}

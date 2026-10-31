@@ -10,7 +10,7 @@ its coverage, or explicitly report what remains untested.
 Example from the repository root:
 
 ```bash
-python3 simulation/run_current.py --runs 1000 --seed 620002 --expected-version 64 --output /tmp/hibino-current-1000
+python3 simulation/run_current.py --runs 1000 --seed 620002 --expected-version 65 --output /tmp/hibino-current-1000
 ```
 
 Keep passed, incomplete, failed and unrun outcomes distinct. Inspect incomplete

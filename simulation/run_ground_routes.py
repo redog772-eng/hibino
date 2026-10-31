@@ -44,8 +44,23 @@ cpp=r'''
 for result,name in [('std::vector<int>','AIV64GroundDistances'),('bool','AIV64ClearSegment'),
                     ('int','AIV64BoundCell'),('bool','AIV61CanStageNatural')]:
     cpp+='\n'+result+' '+function(name)+'\n'
+filtered='blockedLanding' in function('AIV64BoundCell')
+if filtered:
+    cpp+=r'''
+void checkLandingFilter(){
+ const int w=32,h=24;std::vector<unsigned char> open(w*h,1),blocked(w*h,0);
+ const auto d=AIV64GroundDistances(open,w,h,12*w+25);
+ const int first=AIV64BoundCell(open,d,w,h,10*32+16,12*32+16,12*32+16,12*32+16);
+ assert(first>=0);blocked[first]=1;
+ const int other=AIV64BoundCell(open,d,w,h,10*32+16,12*32+16,12*32+16,12*32+16,blocked);
+ assert(other>=0 && other!=first && d[other]<d[12*w+10]);
+}
+'''
+else:
+    cpp+='\nvoid checkLandingFilter(){}\n'
 cpp+=r'''
 int main(int,char** argv){
+ checkLandingFilter();
  const int runs=std::atoi(argv[1]);std::mt19937 rng(std::strtoul(argv[2],nullptr,10));
  std::cout<<"scenario,reachable,path_cells,bounds,arrived,unsafe\n";
  for(int scenario=0;scenario<runs;++scenario){
@@ -102,6 +117,7 @@ summary={
     'unreachable_held':sum(r['reachable']=='0'and r['unsafe']=='0'for r in rows),
     'reachable_stalled':sum(r['arrived']=='0'for r in reachable),
     'unsafe_cases':sum(int(r['unsafe'])>0 for r in rows),
+    'occupied_landing_fallback_checked':filtered,
     'scope':'two-Tank route/waypoint policy; no engine movement, unit collision, enemies or live map-grid adapter',
 }
 (args.output/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')

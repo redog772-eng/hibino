@@ -102,12 +102,37 @@ if 'AIV64GroundDistances(' in source:
     (args.output/'ground_route_checks.txt').write_text(route.stdout+route.stderr)
     route_code=route.returncode
     route_summary=args.output/'ground_routes/summary.json'
-    summary['movement_route_model']=json.loads(route_summary.read_text()) if route_summary.is_file() else {'status':'failed'}
+    result=json.loads(route_summary.read_text()) if route_summary.is_file() else {}
+    current_result=(result.get('source_sha256')==hashlib.sha256(raw).hexdigest() and
+        result.get('runs')==args.runs and result.get('seed')==args.seed and
+        result.get('runner_sha256')==hashlib.sha256((ROOT/'simulation/run_ground_routes.py').read_bytes()).hexdigest())
+    summary['movement_route_model']=dict(result,status='passed' if route_code==0 else 'failed') if current_result else {
+        'status':'failed','reason':'No result matching current source, runner and scenario inputs'}
+    if not current_result:route_code=route_code or 1
 else:
     summary['movement_route_model']={'status':'not_covered_by_this_source_version'}
+motion_code=0
+if 'AIV65HandleBound(' in source:
+    motion=subprocess.run(['python3',str(ROOT/'simulation/run_bound_motion.py'),
+        '--source',str(args.source.resolve()),'--runs',str(args.runs),'--seed',str(args.seed),
+        '--output',str((args.output/'bound_motion').resolve())],cwd=ROOT,capture_output=True,text=True)
+    (args.output/'bound_motion_checks.txt').write_text(motion.stdout+motion.stderr)
+    motion_code=motion.returncode
+    motion_summary=args.output/'bound_motion/summary.json'
+    result=json.loads(motion_summary.read_text()) if motion_summary.is_file() else {}
+    current_result=(result.get('source_sha256')==hashlib.sha256(raw).hexdigest() and
+        result.get('runs')==args.runs and result.get('seed')==args.seed and
+        result.get('runner_sha256')==hashlib.sha256((ROOT/'simulation/run_bound_motion.py').read_bytes()).hexdigest())
+    summary['bound_motion_model']=dict(result,status='passed' if motion_code==0 else 'failed') if current_result else {
+        'status':'failed','reason':'No result matching current source, runner and scenario inputs'}
+    if not current_result:motion_code=motion_code or 1
+else:
+    summary['bound_motion_model']={'status':'not_covered_by_this_source_version'}
 (args.output / 'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
 print(json.dumps(summary,indent=2))
 if commands.returncode:
     raise SystemExit(commands.returncode)
 if route_code:
     raise SystemExit(route_code)
+if motion_code:
+    raise SystemExit(motion_code)

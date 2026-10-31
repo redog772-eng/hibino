@@ -1,0 +1,69 @@
+{
+  "source_version": 65,
+  "source_sha256": "45cfbc821629c732553c0c539112010ac33bf776c1750ea4e1188f6e3c632bf1",
+  "adapter_sha256": "693dc9ccbbe62b75a45358ae90bd3ccee9329795694cb430cb9561f6d54bcac5",
+  "runner_sha256": "c22c7c87349e600acdc77a802a41c29187a1cf403bcee06bdf75d54e8bbb0f00",
+  "mobile_test_sha256": "381d9ba9a1f203e42f71f74bd47cb6e47f4da412efbcc64c4c9a33bbf01b15fd",
+  "seed": 650001,
+  "runs": 1000,
+  "validation_type": "bounded_current_cpp_opening_model_not_engine_matches",
+  "model_start_frame": 3600,
+  "model_deadline_frame": 18000,
+  "core_ready": 1000,
+  "core_not_ready_by_deadline": 0,
+  "incomplete_reasons": {},
+  "milestones_mean_frame": {
+    "factory_frame": 5593.8,
+    "first_tank_frame": 8138.0,
+    "second_tank_frame": 9491.8,
+    "siege_start_frame": 6891.5,
+    "siege_done_frame": 8091.5,
+    "ready_frame": 9493.1
+  },
+  "assumptions": [
+    "Starts after Barracks/Refinery with 14-18 workers and 2-4 Marines, not game start.",
+    "Mineral income is 0.018-0.036 per miner/frame; gas income is assumed.",
+    "Placement/supply scheduling, travel and interruptions are modeled, not the full bot.",
+    "Does not execute the full economy/expansion, scouting, gas assignment or production-scaling directors.",
+    "Up to four worker losses; no enemy army, combat damage, terrain, pathfinding or win condition.",
+    "Budget, worker spending, Factory training and Siege research execute actual extracted current C++."
+  ],
+  "current_mobile_command_checks": "passed",
+  "movement_route_model": {
+    "source_sha256": "45cfbc821629c732553c0c539112010ac33bf776c1750ea4e1188f6e3c632bf1",
+    "seed": 650001,
+    "runs": 1000,
+    "runner_sha256": "7f927b008ca6d421f787de4f03242edd7cb6fec06724cb8686f80ffb53c87bf0",
+    "reachable": 900,
+    "arrived": 900,
+    "unreachable_held": 100,
+    "reachable_stalled": 0,
+    "unsafe_cases": 0,
+    "occupied_landing_fallback_checked": true,
+    "scope": "two-Tank route/waypoint policy; no engine movement, unit collision, enemies or live map-grid adapter",
+    "status": "passed"
+  },
+  "bound_motion_model": {
+    "source_sha256": "45cfbc821629c732553c0c539112010ac33bf776c1750ea4e1188f6e3c632bf1",
+    "runner_sha256": "734509fee3b16649d17302f95685d143ae97888a98dba7ff7cf4cc0a2d42a7f5",
+    "runs": 1000,
+    "seed": 650001,
+    "ownership_released": 1000,
+    "handler": "current_extracted_function",
+    "unsafe_or_unbounded": 0,
+    "max_release_frame": 528,
+    "expected_settle_failures_handled": 250,
+    "scope": "actual bound handler with approximate motion/blockers and delayed Siege; not full engine/pathfinder/formation",
+    "kinds": [
+      "normal",
+      "permanent_landing_block",
+      "ground_contact",
+      "slow_progress_deadline",
+      "Siege_command_failure",
+      "unit_lost",
+      "no_cover_retreat_rejected",
+      "temporary_block"
+    ],
+    "status": "passed"
+  }
+}

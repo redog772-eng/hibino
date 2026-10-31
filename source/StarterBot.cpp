@@ -3463,7 +3463,7 @@ static void AIV353Log(const char* stage,BWAPI::UnitType type,
     if(!out){game->printf("AI v36.1: construction log unavailable");return;}
     for(char& c:error)if(c==',' || c=='\n' || c=='\r')c=' ';
     if(header)out<<"version,frame,seconds,stage,building,worker,tile_x,tile_y,minerals,gas,error\n";
-    out<<"64,"<<game->getFrameCount()<<','<<game->elapsedTime()<<','<<stage<<','
+    out<<"65,"<<game->getFrameCount()<<','<<game->elapsedTime()<<','<<stage<<','
        <<type.getName()<<','<<(worker?worker->getID():-1)<<','<<tile.x<<','<<tile.y<<','
        <<me->minerals()<<','<<me->gas()<<','<<error<<'\n';
 }
@@ -7086,7 +7086,7 @@ void StarterBot::onStart()
 {
     g_v353Tasks.clear();g_v353WatchPreviousFrame=-1;
     AIV353Log("START",BWAPI::UnitTypes::Terran_SCV,nullptr,BWAPI::TilePositions::None);
-    BWAPI::Broodwar->printf("AI v64: ground route natural reinforcement");
+    BWAPI::Broodwar->printf("AI v65: bounded Tank movement recovery");
     // Set our BWAPI options here    
 	BWAPI::Broodwar->setLocalSpeed(10);
     BWAPI::Broodwar->setFrameSkip(0);
@@ -8287,6 +8287,9 @@ static std::vector<unsigned char> g_v64Open;
 static std::vector<int> g_v64Distance;
 static int g_v64Width=0,g_v64Height=0,g_v64RouteFrame=-10000;
 static BWAPI::Position g_v64RouteGoal=BWAPI::Positions::None;
+static int g_v65WatchedTank=-1,g_v65MoveStarted=0,g_v65ProgressFrame=0,g_v65BestDistance=0,g_v65RecoveryStarted=0;
+static bool g_v65Settling=false;
+static std::map<int,int> g_v65RejectedCells;
 
 static std::vector<int> AIV64GroundDistances(const std::vector<unsigned char>& open,
                                             int w,int h,int goal) {
@@ -8322,8 +8325,10 @@ static bool AIV64ClearSegment(const std::vector<unsigned char>& open,int w,int h
 }
 
 static int AIV64BoundCell(const std::vector<unsigned char>& open,const std::vector<int>& distance,
-                          int w,int h,int rx,int ry,int fx,int fy) {
+                          int w,int h,int rx,int ry,int fx,int fy,
+                          const std::vector<unsigned char>& blockedLanding=std::vector<unsigned char>()) {
     if(w<=0 || h<=0 || (int)distance.size()!=w*h || (int)open.size()!=w*h ||
+       (!blockedLanding.empty() && (int)blockedLanding.size()!=w*h) ||
        rx<0 || ry<0 || rx>=w*32 || ry>=h*32)return -1;
     int at=(ry/32)*w+rx/32,best=-1;
     if(distance[at]<0)return -1;
@@ -8342,7 +8347,8 @@ static int AIV64BoundCell(const std::vector<unsigned char>& open,const std::vect
         const int x=(next%w)*32+16,y=(next/w)*32+16;
         if(!AIV64ClearSegment(open,w,h,rx,ry,x,y))break;
         if((x-rx)*(x-rx)+(y-ry)*(y-ry)>288*288)break;
-        if((x-fx)*(x-fx)+(y-fy)*(y-fy)<=160*160)best=next;
+        if((x-fx)*(x-fx)+(y-fy)*(y-fy)<=160*160 &&
+           (blockedLanding.empty() || !blockedLanding[next]))best=next;
         at=next;
     }
     return best;
@@ -8391,9 +8397,33 @@ static int AIV64DistanceToGoal(BWAPI::Position position) {
 
 static BWAPI::Position AIV64NaturalStep(BWAPI::Unit rear,BWAPI::Unit front) {
     const auto a=rear->getPosition(),b=front->getPosition();
-    const int cell=AIV64BoundCell(g_v64Open,g_v64Distance,g_v64Width,g_v64Height,a.x,a.y,b.x,b.y);
+    if(g_v64Width<=0 || g_v64Height<=0)return BWAPI::Positions::None;
+    std::vector<unsigned char> blocked(g_v64Width*g_v64Height,0);
+    const int now=BWAPI::Broodwar->getFrameCount();
+    for(const auto& item:g_v65RejectedCells)
+        if(item.first>=0 && item.first<(int)blocked.size() && item.second>now)blocked[item.first]=1;
+    // Reject occupied landing cells, rather than rejecting the entire route.
+    // A shorter clear waypoint may still let the formation make progress.
+    for(auto ally:BWAPI::Broodwar->self()->getUnits())if(ally && ally!=rear && ally->exists() &&
+        !ally->isFlying() && !ally->isLoaded()) {
+        const auto p=ally->getPosition();
+        for(int dy=-2;dy<=2;++dy)for(int dx=-2;dx<=2;++dx) {
+            const int x=p.x/32+dx,y=p.y/32+dy;
+            if(x<0 || y<0 || x>=g_v64Width || y>=g_v64Height)continue;
+            const int px=x*32+16-p.x,py=y*32+16-p.y;
+            if(px*px+py*py<40*40)blocked[y*g_v64Width+x]=1;
+        }
+    }
+    const int cell=AIV64BoundCell(g_v64Open,g_v64Distance,g_v64Width,g_v64Height,
+                                 a.x,a.y,b.x,b.y,blocked);
     if(cell<0)return BWAPI::Positions::None;
+    const auto rejected=g_v65RejectedCells.find(cell);
+    if(rejected!=g_v65RejectedCells.end() && rejected->second>BWAPI::Broodwar->getFrameCount())
+        return BWAPI::Positions::None;
     const BWAPI::Position target((cell%g_v64Width)*32+16,(cell/g_v64Width)*32+16);
+    for(auto ally:BWAPI::Broodwar->getUnitsInRadius(target,40))
+        if(ally && ally!=rear && ally->exists() && !ally->isFlying() && !ally->isLoaded() &&
+           ally->getPlayer()==BWAPI::Broodwar->self())return BWAPI::Positions::None;
     return rear->hasPath(target)?target:BWAPI::Positions::None;
 }
 
@@ -8483,10 +8513,93 @@ static bool AIV56GroundContact(BWAPI::Position line,int radius) {
     return false;
 }
 
+static bool AIV65HandleBound(const std::vector<BWAPI::Unit>& tanks,
+                              BWAPI::Position home,bool natural) {
+    const int now=BWAPI::Broodwar->getFrameCount();BWAPI::Unit moving=nullptr;
+    for(auto tank:tanks)if(tank->getID()==g_v56MovingTank)moving=tank;
+    if(!moving) {
+        g_v56MovingTank=-1;g_v56MoveTarget=BWAPI::Positions::None;g_v65WatchedTank=-1;
+        g_v65Settling=false;return false;
+    }
+    const int id=moving->getID(),remaining=(int)moving->getDistance(g_v56MoveTarget);
+    const bool danger=AIV56GroundContact(moving->getPosition(),192);
+    if(g_v65WatchedTank!=id) {
+        g_v65WatchedTank=id;g_v65MoveStarted=g_v65ProgressFrame=now;
+        g_v65BestDistance=remaining;g_v65Settling=false;
+    }
+    if(remaining<=g_v65BestDistance-8) {
+        g_v65BestDistance=remaining;g_v65ProgressFrame=now;
+    }
+    BWAPI::Unit cover=nullptr;int coverDistance=10000000;
+    for(auto ally:tanks)if(ally!=moving &&
+        ally->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode &&
+        moving->getDistance(ally)<coverDistance){cover=ally;coverDistance=moving->getDistance(ally);}
+    if(natural && now%240==0)AIV353Log("NATURAL_MOVE",BWAPI::UnitTypes::Terran_Command_Center,
+        moving,BWAPI::TilePositions::None,"remaining="+std::to_string(remaining)+
+        ";age="+std::to_string(now-g_v65MoveStarted)+";idle_age="+
+        std::to_string(now-g_v65ProgressFrame)+";cover_distance="+std::to_string(coverDistance));
+    if(natural && (g_v65Settling || now-g_v65ProgressFrame>=144 || now-g_v65MoveStarted>=480)) {
+        if(!g_v65Settling) {
+            g_v65Settling=true;g_v65RecoveryStarted=now;
+            if(g_v64Width>0 && g_v56MoveTarget.isValid()) {
+                const int cell=(g_v56MoveTarget.y/32)*g_v64Width+g_v56MoveTarget.x/32;
+                g_v65RejectedCells[cell]=now+720;
+            }
+            AIV353Log("NATURAL_MOVE_ABORT",BWAPI::UnitTypes::Terran_Command_Center,
+                moving,BWAPI::TilePositions::None,"remaining="+std::to_string(remaining)+
+                ";age="+std::to_string(now-g_v65MoveStarted));
+        }
+        if(moving->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode) {
+            g_v56MovingTank=-1;g_v56MoveTarget=BWAPI::Positions::None;
+            g_v65WatchedTank=-1;g_v65Settling=false;g_v56LastBound=now;return true;
+        }
+        // Recovery has its own deadline even when a retreat command fails.
+        // Never classify an unconfirmed transformation as Siege cover.
+        if(now-g_v65RecoveryStarted>=144) {
+            // A failed transformation must not create a second unbounded
+            // ownership state. Hold if possible, then reclassify as mobile;
+            // the outer all-sieged gate still forbids advancing another Tank.
+            moving->holdPosition();g_v56LastOrder[id]=now;
+            AIV353Log("NATURAL_SETTLE_FAILED",BWAPI::UnitTypes::Terran_Command_Center,
+                moving,BWAPI::TilePositions::None,"mobile_not_counted_as_cover");
+            g_v56MovingTank=-1;g_v56MoveTarget=BWAPI::Positions::None;
+            g_v65WatchedTank=-1;g_v65Settling=false;g_v56LastBound=now;return true;
+        }
+        if(danger || !cover || coverDistance>256) {
+            // Release the advance after an accepted retreat. If it is rejected,
+            // the recovery deadline above still bounds this ownership episode.
+            if(moving->move(cover?cover->getPosition():home)) {
+                g_v56LastOrder[id]=now;g_v56MovingTank=-1;
+                g_v56MoveTarget=BWAPI::Positions::None;g_v65WatchedTank=-1;
+                g_v65Settling=false;g_v56LastBound=now;
+            }
+            return true;
+        }
+        if(now-g_v56LastOrder[id]>24 && moving->siege())g_v56LastOrder[id]=now;
+        return true;
+    }
+    if(danger && moving->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Tank_Mode) {
+        const auto retreat=cover?cover->getPosition():home;
+        moving->move(retreat);g_v56MoveTarget=retreat;g_v56LastOrder[id]=now;
+        return true;
+    }
+    if(moving->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode) {
+        if(remaining<=(natural?40:125) || danger) {
+            g_v56MovingTank=-1;g_v56MoveTarget=BWAPI::Positions::None;
+            g_v65WatchedTank=-1;g_v65Settling=false;
+        } else if(!danger && now-g_v56LastOrder[id]>72 && moving->unsiege())
+            g_v56LastOrder[id]=now;
+    } else if(danger || remaining<=(natural?16:105)) {
+        if(now-g_v56LastOrder[id]>36 && moving->siege())g_v56LastOrder[id]=now;
+    } else if(now-g_v56LastOrder[id]>60 && moving->move(g_v56MoveTarget))g_v56LastOrder[id]=now;
+    return false;
+}
+
 static void AIV56SiegeLineController() {
     auto& game=BWAPI::Broodwar;auto me=game->self();if(!me)return;
     const int now=game->getFrameCount();
     if(now<g_v56PreviousFrame) {
+        g_v65WatchedTank=-1;g_v65Settling=false;g_v65RejectedCells.clear();
         g_v64NaturalGoal=BWAPI::Positions::None;g_v64RouteFrame=-10000;
         g_v64Open.clear();g_v64Distance.clear();
         g_v59Ridge=BWAPI::Positions::None;
@@ -8581,33 +8694,7 @@ static void AIV56SiegeLineController() {
         "tanks="+std::to_string(tanks.size())+";sieged="+std::to_string(sieged)+
         ";contact="+std::to_string(contact?1:0)+";formed="+std::to_string(g_v59Formed?1:0));
 
-    BWAPI::Unit moving=nullptr;
-    for(auto tank:tanks)if(tank->getID()==g_v56MovingTank)moving=tank;
-    if(!moving){g_v56MovingTank=-1;g_v56MoveTarget=BWAPI::Positions::None;}
-    if(moving) {
-        const int id=moving->getID();
-        const bool danger=AIV56GroundContact(moving->getPosition(),192);
-        if(danger && moving->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Tank_Mode) {
-            // A Zealot closing on a moving Tank is a retreat signal, not a
-            // request to immobilize the isolated Tank in front of it.
-            BWAPI::Position cover=home;int distance=10000000;
-            for(auto ally:tanks)if(ally!=moving &&
-                ally->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode &&
-                moving->getDistance(ally)<distance){distance=moving->getDistance(ally);cover=ally->getPosition();}
-            moving->move(cover);g_v56MoveTarget=cover;g_v56LastOrder[id]=now;
-            return;
-        }
-        if(moving->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode) {
-            if(moving->getDistance(g_v56MoveTarget)<=(preparingNatural?40:125) || danger) {
-                g_v56MovingTank=-1;g_v56MoveTarget=BWAPI::Positions::None;
-            } else if(!danger && now-g_v56LastOrder[id]>72 && moving->unsiege())
-                g_v56LastOrder[id]=now;
-        } else if(danger || moving->getDistance(g_v56MoveTarget)<=(preparingNatural?16:105)) {
-            if(now-g_v56LastOrder[id]>36 && moving->siege())g_v56LastOrder[id]=now;
-        } else if(now-g_v56LastOrder[id]>60 && moving->move(g_v56MoveTarget)) {
-            g_v56LastOrder[id]=now;
-        }
-    }
+    if(AIV65HandleBound(tanks,home,preparingNatural))return;
 
     // Every non-moving Tank is cover. If another controller or a completed
     // morph left it mobile, restore Siege Mode instead of sending it forward.
@@ -8641,7 +8728,7 @@ static void AIV56SiegeLineController() {
        (tvp && !g_v55NaturalPrepared &&
         AIV56Progress(tanks.front()->getPosition(),home,enemy)<enemyProgress-64))) {
         BWAPI::Unit rear=nullptr;
-        for(auto tank:tanks)if(tank!=front &&
+        for(auto tank:tanks)if((preparingNatural || tank!=front) &&
             tank->getType()==BWAPI::UnitTypes::Terran_Siege_Tank_Siege_Mode) {
             if(preparingNatural) {
                 const auto step=AIV64NaturalStep(tank,front);
@@ -8686,6 +8773,7 @@ static void AIV56SiegeLineController() {
                 ?AIV61CanStageNatural((int)tanks.size(),covers,screen,contact,gap,clearPath)
                 :AIV59CanAdvance((int)tanks.size(),covers,screen,contact,gap,clearPath);
             if(allowed) {
+                g_v65WatchedTank=-1;g_v65Settling=false;
                 g_v56MovingTank=rear->getID();g_v56MoveTarget=target;g_v56LastBound=now;
                 if(rear->unsiege())g_v56LastOrder[rear->getID()]=now;
             }

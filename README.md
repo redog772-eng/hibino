@@ -7,6 +7,18 @@ and rejects a mismatched version. See [simulation coverage](simulation/README.md
 and the latest [v62/v63 paired model review](simulation/results/current_v63_1000/REVIEW.md).
 These are not engine matches or win-rate results.
 
+# STARTcraft AI v65
+
+[Windows installer](releases/STARTcraft_AI_v65_tank_movement_recovery.zip): close the game and bots, extract into a new folder, and run `upgrade_ai_v65.cmd`. Verified v54-v64 sources are accepted. Current-source model receipts are included in the ZIP.
+
+The [v64 replay/log review](simulation/results/pluto_v64_review.md) confirms a persistent outstanding Tank move: one Tank receives 88 requests to the same point while siege-line metrics repeatedly remain `moving=1`, `front_progress=111`. Other Tanks accumulate and the natural never becomes ready. The earlier route model assumed waypoint arrival and missed this live-command failure mode.
+
+v65 adds progress and total-duration deadlines for natural bounds. A failed bound settles under safe cover or retreats; Siege is confirmed before counting the unit as cover. Recovery itself has a deadline even when Siege or retreat commands fail. A mobile fallback remains non-cover under the outer formation gate. Temporarily rejected/occupied landings can yield a shorter clear waypoint, and the front Tank can be considered after rear candidates if another Tank supplies the required cover. Existing contact, screen and cover requirements remain.
+
+The current-source runner now executes the actual moving-task handler against delayed transitions, persistent/temporary blockers, contact, slow motion, unit loss and command rejection. In 1,000 identical adapter cases, the old v64 handler leaves 625 claims outstanding at the 900-frame horizon; v65 releases all 1,000. A second seed also releases all 1,000. Production models still finish 1,000/1,000 per seed; route models retain 900 arrivals and 100 safe disconnected holds per seed. These are component-model outcomes, not wins. Full formation control, real StarCraft collision/pathfinding and actual expansion success remain unverified, as does full Windows linking/build. Official BWAPI header checks and mocked installer rollback tests pass.
+
+The existing construction CSV filename is retained, with version **65**. New `NATURAL_MOVE`, `NATURAL_MOVE_ABORT` and `NATURAL_SETTLE_FAILED` records expose current distance, move/progress age and recovery failures.
+
 # STARTcraft AI v64
 
 [Windows installer](releases/STARTcraft_AI_v64_ground_route_natural.zip): close the game and bots, extract into a new folder, and run `upgrade_ai_v64.cmd`. Verified v54-v63 sources are accepted. Source-bound model summaries are included in the ZIP.

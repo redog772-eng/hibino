@@ -60,6 +60,7 @@ for result, name in [('int', 'AIV62OpeningBudget'), ('void', 'AIV11TrainWorkers'
                      ('bool', 'AIV61CanStageNatural'), ('BWAPI::Position', 'AIV59HighGround'),
                      ('int', 'AIV56Progress'), ('BWAPI::Position', 'AIV56PointOnLine'),
                      ('bool', 'AIV56GroundContact'), ('void', 'AIV55PrepareNatural'),
+                     ('bool', 'AIV65HandleBound'),
                      ('void', 'AIV56SiegeLineController'), ('void', 'AIV58HoldScreen')]:
     cpp += '\n' + result + ' ' + function(name) + '\n'
 with tempfile.TemporaryDirectory() as directory:

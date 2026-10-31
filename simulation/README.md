@@ -8,7 +8,7 @@ records the source, runner, adapter and mobile-test hashes.
 Run from any working directory:
 
 ```bash
-python3 /workspace/hibino/simulation/run_current.py --runs 1000 --seed 620002 --expected-version 64 --output /tmp/hibino-current-1000
+python3 /workspace/hibino/simulation/run_current.py --runs 1000 --seed 620002 --expected-version 65 --output /tmp/hibino-current-1000
 ```
 
 The runner executes actual current `AIV11Count`, `AIV62OpeningBudget`,
@@ -54,6 +54,23 @@ This extension covers route/waypoint policy. It does not execute the full Tank
 controller, its command timing, unit collisions, dynamic BWAPI grid/cache
 adapter, screen casualties or enemies. The route model is separate from the
 opening resource model; neither is a match simulator or a replay playback.
+
+v65 adds `run_bound_motion.py`, automatically invoked when the selected source
+exposes `AIV65HandleBound`. It executes that actual function with approximate
+position updates, a delayed 37-frame transformation, persistent/temporary
+obstruction, contact, slow progress, unit loss and Siege command failure. Results
+are under `bound_motion/`. A known-safe fallback or confirmed Siege must end
+each ownership episode; unbounded episodes or invalid state transitions fail.
+For v64, the same adapter can extract the historical inline moving block from
+an explicit `--source` path, preserving its commands and translating only its
+outer-controller return into the wrapper's return value. That baseline is
+expected to fail; its result must remain marked as failed, not counted as wins.
+
+This is still a component adapter: no full formation controller, enemy battle,
+engine pathfinding or exact collision geometry is executed. It specifically
+closes the earlier waypoint model's blind spot of assuming instant arrival.
+The parent runner validates source/runner hashes before accepting child-model
+results, so a failed compile cannot silently reuse an earlier summary.
 
 Use `compare_runs.py BASELINE_DIR CANDIDATE_DIR --output comparison.json` for
 paired comparisons. It requires the same adapter, runner, mobile-test hashes,
