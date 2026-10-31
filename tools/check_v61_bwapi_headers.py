@@ -41,6 +41,18 @@ extern int g_v55PreviousFrame,g_v57NoLoadUntil,g_v7State;
 extern bool g_v55NaturalPrepared;
 const int AIV7_ATTACK=2;
 '''
+prefix+=source[source.index('static int g_v66CCId='):source.index('// TvP mobile combat has one command owner.')]
+prefix+=source[source.index('enum AIV66Action'):source.index('static bool AIV66SiteSafe(')]
+prefix+=r'''
+extern std::map<int,BWAPI::Position> g_v10EnemyBuildings;
+extern std::map<int,int> g_v39BuilderUntil;
+BWAPI::Unit AIV11BuildWorker(BWAPI::Position);
+BWAPI::TilePosition AIV12BuildingTile(BWAPI::UnitType,BWAPI::Unit);
+bool AIV35ForbiddenBuildPad(BWAPI::Position,BWAPI::TilePosition,BWAPI::Player,int);
+bool AIV11BuildNear(BWAPI::UnitType,BWAPI::TilePosition);
+BWAPI::Unit AIV31DepotForPatch(BWAPI::Unit);
+BWAPI::Unit AIV31PatchForWorker(BWAPI::Unit);
+'''
 prefix += source[source.index('struct AIV11Counts {'):source.index('static int AIV62OpeningBudget(')]
 prefix += r'''
 AIV11Counts AIV11Count();
@@ -61,6 +73,9 @@ for result, name in [('int', 'AIV62OpeningBudget'), ('void', 'AIV11TrainWorkers'
                      ('int', 'AIV56Progress'), ('BWAPI::Position', 'AIV56PointOnLine'),
                      ('bool', 'AIV56GroundContact'), ('void', 'AIV55PrepareNatural'),
                      ('bool', 'AIV65HandleBound'),
+                     ('bool','AIV66SiteSafe'),('BWAPI::TilePosition','AIV66AirSite'),
+                     ('bool','AIV66PadClear'),('BWAPI::TilePosition','AIV66MainPad'),
+                     ('BWAPI::Position','AIV66AirWaypoint'),('void','AIV66ExpansionDirector'),
                      ('void', 'AIV56SiegeLineController'), ('void', 'AIV58HoldScreen')]:
     cpp += '\n' + result + ' ' + function(name) + '\n'
 with tempfile.TemporaryDirectory() as directory:

@@ -1,0 +1,13 @@
+{
+  "source_sha256": "a73f4f322185f4d27a09ce4288370e338a5de792b4de219cd8b6e7979a4009ec",
+  "seed": 620002,
+  "runs": 1000,
+  "runner_sha256": "7f927b008ca6d421f787de4f03242edd7cb6fec06724cb8686f80ffb53c87bf0",
+  "reachable": 900,
+  "arrived": 900,
+  "unreachable_held": 100,
+  "reachable_stalled": 0,
+  "unsafe_cases": 0,
+  "occupied_landing_fallback_checked": true,
+  "scope": "two-Tank route/waypoint policy; no engine movement, unit collision, enemies or live map-grid adapter"
+}

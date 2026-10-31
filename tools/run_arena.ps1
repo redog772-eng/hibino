@@ -1,4 +1,5 @@
-param([string]$Root = 'C:\Users\User\starcraft-api\STARTcraft')
+param([string]$Root = 'C:\Users\User\starcraft-api\STARTcraft',
+      [ValidateSet('Windowed','Fullscreen')][string]$WindowMode = 'Windowed')
 
 $ErrorActionPreference = 'Stop'
 $arenaRoot = Join-Path $Root 'arena\STARTcraft_vs_Pluto'
@@ -9,20 +10,22 @@ function Require-File([string]$Path) {
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { throw "File not found: $Path" }
 }
 
-function Disable-WindowMode([string]$Runtime) {
-    $ini = Join-Path $Runtime 'bwapi-data\bwapi.ini'
-    Require-File $ini
-    $text = [IO.File]::ReadAllText($ini)
-    $text = [Text.RegularExpressions.Regex]::Replace(
-        $text, '(?im)^windowed\s*=\s*ON\s*$', 'windowed = OFF'
-    )
-    [IO.File]::WriteAllText($ini, $text, [Text.Encoding]::ASCII)
-}
-
-function Start-BwapiGame([string]$Runtime) {
+function Start-BwapiGame([string]$Runtime, [int]$Left) {
     $inject = Join-Path $Runtime 'injectory_x86.exe'
     $launchArgs = @('--launch', 'StarCraft.exe', '--inject', 'bwapi-data\BWAPI.dll')
-    Start-Process -FilePath $inject -ArgumentList $launchArgs -WorkingDirectory $Runtime | Out-Null
+    $info = New-Object System.Diagnostics.ProcessStartInfo
+    $info.FileName = $inject
+    $info.Arguments = $launchArgs -join ' '
+    $info.WorkingDirectory = $Runtime
+    $info.UseShellExecute = $false
+    # Official BWAPI 4.4.0 Config.cpp honors these before INI values. Scope
+    # them to this injector/game, including the second process's position.
+    $info.EnvironmentVariables['BWAPI_CONFIG_WINDOW__WINDOWED'] = $(if ($WindowMode -eq 'Windowed') { 'ON' } else { 'OFF' })
+    $info.EnvironmentVariables['BWAPI_CONFIG_WINDOW__LEFT'] = [string]$Left
+    $info.EnvironmentVariables['BWAPI_CONFIG_WINDOW__TOP'] = '0'
+    $info.EnvironmentVariables['BWAPI_CONFIG_WINDOW__WIDTH'] = '640'
+    $info.EnvironmentVariables['BWAPI_CONFIG_WINDOW__HEIGHT'] = '480'
+    [Diagnostics.Process]::Start($info) | Out-Null
 }
 
 function Sync-ArenaMaps {
@@ -72,8 +75,10 @@ try {
     Require-File (Join-Path $guestRoot 'bwapi-data\AI\pluto.dll')
     Require-File (Join-Path $guestRoot 'bwapi-data\AI\pluto\pluto_infer.exe')
     Require-File (Join-Path $guestRoot 'bwapi-data\AI\pluto\pluto_weights.bin')
-    Disable-WindowMode $hostRoot
-    Disable-WindowMode $guestRoot
+    $windowHelper = Join-Path $PSScriptRoot 'configure_arena_windows.py'
+    Require-File $windowHelper
+    & python $windowHelper --root $Root --mode $WindowMode
+    if ($LASTEXITCODE -ne 0) { throw 'Could not configure matching window modes.' }
     Sync-ArenaMaps
 
     Write-Host 'Starting STARTcraft AI client first...'
@@ -83,17 +88,18 @@ try {
     if (-not (Get-Process -Name StarterBot -ErrorAction SilentlyContinue)) { throw 'StarterBot exited before Pluto was launched.' }
 
     Write-Host 'Launching the StarCraft instance that STARTcraft will control...'
-    Start-BwapiGame $hostRoot
+    Start-BwapiGame $hostRoot 0
     Start-Sleep -Seconds 5
     if (-not (Get-Process -Name StarCraft -ErrorAction SilentlyContinue)) { throw 'STARTcraft StarCraft process did not start.' }
     if (-not (Get-Process -Name StarterBot -ErrorAction SilentlyContinue)) { throw 'StarterBot could not attach to the STARTcraft BWAPI instance.' }
 
     Write-Host 'Launching Pluto opponent...'
-    Start-BwapiGame $guestRoot
+    Start-BwapiGame $guestRoot 680
     Start-Sleep -Seconds 3
     if (@(Get-Process -Name StarCraft -ErrorAction SilentlyContinue).Count -lt 2) { throw 'The second StarCraft process did not start.' }
 
     Write-Host 'SUCCESS: STARTcraft vs Pluto match is starting.'
+    Write-Host "Requested display mode for BOTH instances: $WindowMode"
     Write-Host "Replay: $hostRoot\Replays\STARTcraft_vs_Pluto.rep"
     Write-Host "Pluto logs: $guestRoot\pluto.log and pluto_infer.log"
 } catch {

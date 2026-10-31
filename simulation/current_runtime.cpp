@@ -73,6 +73,8 @@ bool U::research(TechTypes::T t){if(t!=TechTypes::Tank_Siege_Mode || !completed 
  player.siegeStart=frame;researchFinish=frame+1200;return true;}
 }
 int g_v11NoExpansionUntil=0,g_v11Reserve=0,g_v28MilitaryMineralReserve=0,g_v28GasReserve=0;
+int g_v66Reserve=0;
+bool AIV66StagingCC(BWAPI::Unit){return false;}
 bool g_v29TerranMech=false;std::map<int,int> g_v11ShopFailures;
 BWAPI::Race AIV13OpponentRace(){return BWAPI::Races::Protoss;}
 void AIV11Reset(){}

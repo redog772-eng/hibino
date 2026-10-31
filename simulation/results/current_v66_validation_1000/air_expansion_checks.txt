@@ -1,0 +1,22 @@
+{
+  "source_sha256": "a73f4f322185f4d27a09ce4288370e338a5de792b4de219cd8b6e7979a4009ec",
+  "runner_sha256": "5715c4028f8fa4d7c0c810a834e9cda31c17c5b06aaae09085e8915442a28719",
+  "runs": 1000,
+  "seed": 660001,
+  "passed": 1000,
+  "failed": 0,
+  "decision_checks": 14000,
+  "adapter_sha256": "194a498d0a78cf773424838aa0e57deac022020f585c88f04815506b0ee2c830",
+  "director": {
+    "passed": 1000,
+    "activated": 600,
+    "lost": 100,
+    "blocked": 300
+  },
+  "validation_type": "actual_cpp_flight_decisions_and_scripted_director_not_engine_matches",
+  "unrun": [
+    "Real worker/depot association (scripted in director adapter)",
+    "Mineral-only site search, placement, terrain and safety perception",
+    "BWAPI command acceptance, travel, landing, construction and mining in the engine"
+  ]
+}

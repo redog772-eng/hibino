@@ -128,6 +128,21 @@ if 'AIV65HandleBound(' in source:
     if not current_result:motion_code=motion_code or 1
 else:
     summary['bound_motion_model']={'status':'not_covered_by_this_source_version'}
+air_code=0
+if 'AIV66FlightAction(' in source:
+    air=subprocess.run(['python3',str(ROOT/'simulation/run_air_expansion.py'),
+        '--source',str(args.source.resolve()),'--runs',str(args.runs),'--seed',str(args.seed),
+        '--output',str((args.output/'air_expansion').resolve())],cwd=ROOT,capture_output=True,text=True)
+    (args.output/'air_expansion_checks.txt').write_text(air.stdout+air.stderr)
+    air_code=air.returncode
+    path=args.output/'air_expansion/summary.json'
+    result=json.loads(path.read_text()) if path.is_file() else {}
+    current=(result.get('source_sha256')==hashlib.sha256(raw).hexdigest() and
+        result.get('runs')==args.runs and result.get('seed')==args.seed and
+        result.get('runner_sha256')==hashlib.sha256((ROOT/'simulation/run_air_expansion.py').read_bytes()).hexdigest() and
+        result.get('adapter_sha256')==hashlib.sha256((ROOT/'simulation/air_runtime.cpp').read_bytes()).hexdigest())
+    summary['air_expansion_decisions']=dict(result,status='passed' if air_code==0 else 'failed') if current else {'status':'failed','reason':'Missing current receipt'}
+    if not current:air_code=air_code or 1
 (args.output / 'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
 print(json.dumps(summary,indent=2))
 if commands.returncode:
@@ -136,3 +151,5 @@ if route_code:
     raise SystemExit(route_code)
 if motion_code:
     raise SystemExit(motion_code)
+if air_code:
+    raise SystemExit(air_code)

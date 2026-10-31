@@ -1,0 +1,92 @@
+{
+  "source_version": 66,
+  "source_sha256": "a73f4f322185f4d27a09ce4288370e338a5de792b4de219cd8b6e7979a4009ec",
+  "adapter_sha256": "7ff24113c584db537bbafc7dfca3f97182f8deec0cafedc0606b09c51e0d4ed3",
+  "runner_sha256": "e89b4915c1f991dd5bada01534827e4ccaf54c2b4fef66928122bbe4348dcea2",
+  "mobile_test_sha256": "381d9ba9a1f203e42f71f74bd47cb6e47f4da412efbcc64c4c9a33bbf01b15fd",
+  "seed": 660001,
+  "runs": 1000,
+  "validation_type": "bounded_current_cpp_opening_model_not_engine_matches",
+  "model_start_frame": 3600,
+  "model_deadline_frame": 18000,
+  "core_ready": 1000,
+  "core_not_ready_by_deadline": 0,
+  "incomplete_reasons": {},
+  "milestones_mean_frame": {
+    "factory_frame": 5592.0,
+    "first_tank_frame": 8169.9,
+    "second_tank_frame": 9539.9,
+    "siege_start_frame": 6904.1,
+    "siege_done_frame": 8104.1,
+    "ready_frame": 9541.6
+  },
+  "assumptions": [
+    "Starts after Barracks/Refinery with 14-18 workers and 2-4 Marines, not game start.",
+    "Mineral income is 0.018-0.036 per miner/frame; gas income is assumed.",
+    "Placement/supply scheduling, travel and interruptions are modeled, not the full bot.",
+    "Does not execute the full economy/expansion, scouting, gas assignment or production-scaling directors.",
+    "Up to four worker losses; no enemy army, combat damage, terrain, pathfinding or win condition.",
+    "Budget, worker spending, Factory training and Siege research execute actual extracted current C++."
+  ],
+  "current_mobile_command_checks": "passed",
+  "movement_route_model": {
+    "source_sha256": "a73f4f322185f4d27a09ce4288370e338a5de792b4de219cd8b6e7979a4009ec",
+    "seed": 660001,
+    "runs": 1000,
+    "runner_sha256": "7f927b008ca6d421f787de4f03242edd7cb6fec06724cb8686f80ffb53c87bf0",
+    "reachable": 900,
+    "arrived": 900,
+    "unreachable_held": 100,
+    "reachable_stalled": 0,
+    "unsafe_cases": 0,
+    "occupied_landing_fallback_checked": true,
+    "scope": "two-Tank route/waypoint policy; no engine movement, unit collision, enemies or live map-grid adapter",
+    "status": "passed"
+  },
+  "bound_motion_model": {
+    "source_sha256": "a73f4f322185f4d27a09ce4288370e338a5de792b4de219cd8b6e7979a4009ec",
+    "runner_sha256": "734509fee3b16649d17302f95685d143ae97888a98dba7ff7cf4cc0a2d42a7f5",
+    "runs": 1000,
+    "seed": 660001,
+    "ownership_released": 1000,
+    "handler": "current_extracted_function",
+    "unsafe_or_unbounded": 0,
+    "max_release_frame": 528,
+    "expected_settle_failures_handled": 250,
+    "scope": "actual bound handler with approximate motion/blockers and delayed Siege; not full engine/pathfinder/formation",
+    "kinds": [
+      "normal",
+      "permanent_landing_block",
+      "ground_contact",
+      "slow_progress_deadline",
+      "Siege_command_failure",
+      "unit_lost",
+      "no_cover_retreat_rejected",
+      "temporary_block"
+    ],
+    "status": "passed"
+  },
+  "air_expansion_decisions": {
+    "source_sha256": "a73f4f322185f4d27a09ce4288370e338a5de792b4de219cd8b6e7979a4009ec",
+    "runner_sha256": "5715c4028f8fa4d7c0c810a834e9cda31c17c5b06aaae09085e8915442a28719",
+    "runs": 1000,
+    "seed": 660001,
+    "passed": 1000,
+    "failed": 0,
+    "decision_checks": 14000,
+    "adapter_sha256": "194a498d0a78cf773424838aa0e57deac022020f585c88f04815506b0ee2c830",
+    "director": {
+      "passed": 1000,
+      "activated": 600,
+      "lost": 100,
+      "blocked": 300
+    },
+    "validation_type": "actual_cpp_flight_decisions_and_scripted_director_not_engine_matches",
+    "unrun": [
+      "Real worker/depot association (scripted in director adapter)",
+      "Mineral-only site search, placement, terrain and safety perception",
+      "BWAPI command acceptance, travel, landing, construction and mining in the engine"
+    ],
+    "status": "passed"
+  }
+}

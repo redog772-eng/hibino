@@ -7,6 +7,14 @@ and rejects a mismatched version. See [simulation coverage](simulation/README.md
 and the latest [v62/v63 paired model review](simulation/results/current_v63_1000/REVIEW.md).
 These are not engine matches or win-rate results.
 
+# STARTcraft AI v66
+
+[Windows package](releases/STARTcraft_AI_v66_air_expansion_windows.zip): extract into a new folder, close games/bots, run `upgrade_ai_v66.cmd`, then use **this package's** `run_STARTcraft_vs_Pluto.cmd`. Both games default to windowed mode; the new launcher backs up both INIs and applies matching process-specific BWAPI settings. Previously extracted launchers remain unchanged.
+
+The [uploaded v65 review](simulation/results/pluto_v65_review.md) confirms movement recovery without a working natural. v66 can build a separate CC at home, fly to a mineral cluster (including gasless or ground-blocked sites), land and train local SCVs. It requires four workers gathering/carrying local minerals before recording activation. Threats or stalled commands trigger another site or a return; the original main CC is never assigned this task.
+
+Two seeds each run 1,000 current-source opening, route, movement and flight-decision scenarios. The actual expansion director also runs against scripted economy/commands: 600 activated, 100 detected CC losses, 300 safely blocked cases per 1,000. These are expected component outcomes, not wins. Terrain site search, real worker/depot assignment, full Windows compilation, live flight/mining and GUI results remain unverified. Official BWAPI header syntax, PowerShell parsing, INI configuration and mocked installation/rollback checks pass. Construction rows identify version **66**.
+
 # STARTcraft AI v65
 
 [Windows installer](releases/STARTcraft_AI_v65_tank_movement_recovery.zip): close the game and bots, extract into a new folder, and run `upgrade_ai_v65.cmd`. Verified v54-v64 sources are accepted. Current-source model receipts are included in the ZIP.

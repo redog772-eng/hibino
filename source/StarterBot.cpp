@@ -23,6 +23,10 @@ static int g_v39OwnershipFrame=-1;
 // STARTCRAFT_AI_V35_3_BUILDER_OWNERSHIP
 namespace {
 BWAPI::Race AIV13OpponentRace();
+static int g_v66CCId=-1,g_v66Reserve=0;
+static bool g_v66Staging=false,g_v66Remote=false;
+static bool AIV66StagingCC(BWAPI::Unit u){return u && g_v66Staging && u->getID()==g_v66CCId;}
+static bool AIV66RemoteCC(BWAPI::Unit u){return u && g_v66Remote && u->getID()==g_v66CCId;}
 // TvP mobile combat has one command owner. Counts and strategic decisions may
 // still inspect these units, but legacy movement/micro must leave them alone.
 static bool AIV61OwnsMobile(BWAPI::Unit u) {
@@ -2088,7 +2092,7 @@ static BWAPI::Position AIV33AssemblyPoint() {
     // the moment construction starts. v43 waited for completion and Pluto
     // destroyed the exposed CC while the army remained at the main.
     for(auto cc:me->getUnits())if(cc && cc->exists() &&
-        !cc->isFlying() && cc!=main && cc->getType()==BWAPI::UnitTypes::Terran_Command_Center &&
+        !cc->isFlying() && cc!=main && !AIV66RemoteCC(cc) && cc->getType()==BWAPI::UnitTypes::Terran_Command_Center &&
         (!natural || cc->getDistance(main)<natural->getDistance(main)))natural=cc;
     if(!natural)return fallback;
     BWAPI::Position b=natural->getPosition(),foe=AIV6AttackTarget();
@@ -2632,7 +2636,7 @@ int AIV11WorkerTarget() {
     for(auto cc:me->getUnits()) {
         if (!cc || !cc->exists() ||
             cc->getType()!=BWAPI::UnitTypes::Terran_Command_Center) continue;
-        if(cc->isCompleted() && !cc->isFlying()) completed.push_back(cc);
+        if(cc->isCompleted() && !cc->isFlying() && !AIV66StagingCC(cc)) completed.push_back(cc);
         else ++unfinished;
     }
     if(completed.empty()) return 18;
@@ -2665,6 +2669,7 @@ void AIV11TrainWorkers() {
     AIV11Reset();
     if(game->getFrameCount()%12)return;
     AIV11Counts c=AIV11Count();
+    if(g_v66Reserve>0 && c.scv>=18 && me->minerals()<g_v66Reserve+50)return;
     const int openingBudget=AIV62OpeningBudget(AIV13OpponentRace()==BWAPI::Races::Protoss,
         c.cc,c.scv,c.barracks,c.factory,c.tank,
         me->hasResearched(BWAPI::TechTypes::Tank_Siege_Mode) ||
@@ -2690,7 +2695,7 @@ void AIV11TrainWorkers() {
     if(c.scv+pending>=AIV11WorkerTarget())return;
     for(auto cc:me->getUnits()) {
         if(cc->getType()!=BWAPI::UnitTypes::Terran_Command_Center || !cc->isCompleted() ||
-           cc->isTraining() || !game->canMake(BWAPI::UnitTypes::Terran_SCV,cc))continue;
+           AIV66StagingCC(cc) || cc->isTraining() || !game->canMake(BWAPI::UnitTypes::Terran_SCV,cc))continue;
         if(g_v11Reserve>0 && c.scv>=20 && me->minerals()<g_v11Reserve+100)return;
         if(cc->train(BWAPI::UnitTypes::Terran_SCV))return; // one queue at a time
     }
@@ -3463,7 +3468,7 @@ static void AIV353Log(const char* stage,BWAPI::UnitType type,
     if(!out){game->printf("AI v36.1: construction log unavailable");return;}
     for(char& c:error)if(c==',' || c=='\n' || c=='\r')c=' ';
     if(header)out<<"version,frame,seconds,stage,building,worker,tile_x,tile_y,minerals,gas,error\n";
-    out<<"65,"<<game->getFrameCount()<<','<<game->elapsedTime()<<','<<stage<<','
+    out<<"66,"<<game->getFrameCount()<<','<<game->elapsedTime()<<','<<stage<<','
        <<type.getName()<<','<<(worker?worker->getID():-1)<<','<<tile.x<<','<<tile.y<<','
        <<me->minerals()<<','<<me->gas()<<','<<error<<'\n';
 }
@@ -4001,7 +4006,7 @@ void AIV15DetectionDirector(){
     if(academy){
         for(auto cc:me->getUnits()){
             if(!cc || cc->getType()!=BWAPI::UnitTypes::Terran_Command_Center ||
-               !cc->isCompleted() || cc->getAddon())continue;
+               !cc->isCompleted() || AIV66StagingCC(cc) || cc->getAddon())continue;
             if(me->minerals()>=100 && me->gas()>=50 &&
                game->canMake(BWAPI::UnitTypes::Terran_Comsat_Station,cc) &&
                cc->buildAddon(BWAPI::UnitTypes::Terran_Comsat_Station)){
@@ -4175,6 +4180,7 @@ BWAPI::TilePosition AIV16NaturalSite(BWAPI::Unit builder) {
 
 
 bool AIV16Expand(AIV11Counts c){
+    if(g_v66Staging)return false;
     auto& game=BWAPI::Broodwar;
     auto me=game->self();
     const bool tvz=AIV13OpponentRace()==BWAPI::Races::Zerg;
@@ -4692,7 +4698,7 @@ static BWAPI::Unit AIV31DepotForPatch(BWAPI::Unit patch) {
     BWAPI::Unit best=nullptr;
     int bestDistance=1000000;
     for(auto cc:BWAPI::Broodwar->self()->getUnits()) {
-        if(!cc || !cc->exists() || !cc->isCompleted() || cc->isFlying() ||
+        if(!cc || !cc->exists() || !cc->isCompleted() || cc->isFlying() || AIV66StagingCC(cc) ||
            cc->getType()!=BWAPI::UnitTypes::Terran_Command_Center)continue;
         const int d=cc->getDistance(patch);
         if(d<bestDistance){best=cc;bestDistance=d;}
@@ -4833,7 +4839,7 @@ static void AIV32DefenseAndWorkers() {
     }
     int selectedThreat=-1;
     if(main) for(auto cc:me->getUnits()) {
-        if(!cc || !cc->exists() || cc->isFlying() || cc==main ||
+        if(!cc || !cc->exists() || cc->isFlying() || cc==main || AIV66RemoteCC(cc) ||
            cc->getType()!=BWAPI::UnitTypes::Terran_Command_Center)continue;
         int threatScore=0;
         for(auto ep:game->enemies())for(auto e:ep->getUnits())
@@ -5066,7 +5072,7 @@ static void AIV55PrepareNatural() {
         if(!main || cc->getDistance(home)<main->getDistance(home))main=cc;
     }
     if(main)for(auto cc:me->getUnits())if(cc && cc->exists() && !cc->isFlying() &&
-        cc!=main && cc->getType()==BWAPI::UnitTypes::Terran_Command_Center &&
+        cc!=main && !AIV66RemoteCC(cc) && cc->getType()==BWAPI::UnitTypes::Terran_Command_Center &&
         (!naturalCC || cc->getDistance(main)<naturalCC->getDistance(main)))naturalCC=cc;
     BWAPI::TilePosition tile=BWAPI::TilePositions::None;
     if(naturalCC)tile=naturalCC->getTilePosition();
@@ -5312,7 +5318,7 @@ void AIV11Produce(AIV11Counts c) {
         me->supplyTotal() - me->supplyUsed() <= (tvp?8:22) &&
         nowSupply.unfinishedDepot == 0 &&
         !AIV11PendingBuild(BWAPI::UnitTypes::Terran_Supply_Depot);
-    const int reserve=(std::max)((std::max)(g_v11Reserve,g_v28MilitaryMineralReserve),depotMissing?100:0); // STARTCRAFT_AI_V19
+    const int reserve=(std::max)(g_v66Reserve,(std::max)((std::max)(g_v11Reserve,g_v28MilitaryMineralReserve),depotMissing?100:0));
     const int frame=game->getFrameCount();
     if(frame%12 || !me)return;
     // Start Siege before the next Tank spends the same minerals. Research
@@ -6618,7 +6624,7 @@ static void AIV26EarlyDefenseAndRecon() {
     if(!cc)return;
     BWAPI::Unit main=cc,natural=nullptr;
     for(auto base:me->getUnits())if(base && base->exists() && !base->isFlying() &&
-        base!=main && base->getType()==BWAPI::UnitTypes::Terran_Command_Center &&
+        base!=main && !AIV66RemoteCC(base) && base->getType()==BWAPI::UnitTypes::Terran_Command_Center &&
         (!natural || base->getDistance(main)<natural->getDistance(main)))natural=base;
     // An unfinished expansion is already an investment that must be defended.
     // All early-defense distances, staging and bunker loading use it as soon as
@@ -6786,6 +6792,7 @@ static bool AIV22ScaleProduction(AIV11Counts c,BWAPI::Race enemy) {
     auto& game=BWAPI::Broodwar;
     auto me=game->self();
     if(!me)return false;
+    if(g_v66Reserve>0){g_v28GasReserve=0;g_v28MilitaryMineralReserve=0;return false;}
     if(enemy==BWAPI::Races::Protoss && c.cc==1 &&
        (c.tank<2 || (!me->hasResearched(BWAPI::TechTypes::Tank_Siege_Mode) &&
                      !me->isResearching(BWAPI::TechTypes::Tank_Siege_Mode)))) {
@@ -6939,6 +6946,240 @@ static void AIV22AcademyDirector() {
 }
 
 
+// The expansion transport owns only a CC built by this director, never the main.
+enum AIV66Action { A66_WAIT,A66_BUILD,A66_LIFT,A66_MOVE,A66_LAND,A66_SEED,A66_ACTIVE,A66_REPLAN,A66_LOST };
+static int AIV66FlightAction(bool exists,bool pending,bool hadCC,bool complete,bool flying,
+                            bool atTarget,bool nearTarget,bool safe,bool canLand,int workers,
+                            int age,int stalled) {
+    if(hadCC && !exists)return A66_LOST;
+    if(!exists)return pending?(age>=1200?A66_REPLAN:A66_WAIT):A66_BUILD;
+    if(!complete)return A66_WAIT;
+    if(!safe)return A66_REPLAN;
+    if(!flying && atTarget)return workers>=4?A66_ACTIVE:A66_SEED;
+    if(stalled>=720)return A66_REPLAN;
+    if(!flying)return A66_LIFT;
+    if(nearTarget && canLand)return A66_LAND;
+    return A66_MOVE;
+}
+static int g_v66Previous=-1,g_v66WaitSince=-1,g_v66Started=-1,g_v66Retry=0,g_v66Order=-10000;
+static int g_v66Progress=0,g_v66Best=10000000;
+static bool g_v66Returning=false,g_v66Activated=false;
+static BWAPI::TilePosition g_v66Target=BWAPI::TilePositions::None,g_v66BuildPad=BWAPI::TilePositions::None;
+static std::map<int,int> g_v66RejectedBases;
+
+static bool AIV66SiteSafe(BWAPI::Position p,bool airOnly=false) {
+    auto& game=BWAPI::Broodwar;
+    for(auto ep:game->enemies())for(auto e:ep->getUnits())if(e && e->exists() && e->isVisible() &&
+        e->getDistance(p)<640 &&
+        (airOnly?e->getType().airWeapon()!=BWAPI::WeaponTypes::None:
+         (e->getType().groundWeapon()!=BWAPI::WeaponTypes::None || e->getType().airWeapon()!=BWAPI::WeaponTypes::None)) &&
+        (!e->getType().isWorker() || e->isAttacking()))return false;
+    for(const auto& item:g_v10EnemyBuildings)if(item.second.isValid() && item.second.getDistance(p)<600)return false;
+    return true;
+}
+
+static BWAPI::TilePosition AIV66AirSite() {
+    auto& game=BWAPI::Broodwar;auto me=game->self();
+    const BWAPI::Position home(me->getStartLocation());
+    std::vector<BWAPI::Position> minerals,anchors;
+    for(auto m:game->getStaticMinerals())if(m && m->getInitialResources()>=200)
+        minerals.push_back(m->getInitialPosition());
+    for(auto g:game->getStaticGeysers())if(g)anchors.push_back(g->getInitialPosition());
+    for(auto p:minerals) {
+        bool clustered=false;for(auto a:anchors)if(a.getDistance(p)<360)clustered=true;
+        if(!clustered)anchors.push_back(p); // Includes gasless mineral-wall/backdoor bases.
+    }
+    const auto type=BWAPI::UnitTypes::Terran_Command_Center;
+    BWAPI::TilePosition best=BWAPI::TilePositions::None;int bestScore=100000000;
+    for(auto anchor:anchors) {
+        if(anchor.getDistance(home)<400 || anchor.getDistance(home)>2600)continue;
+        for(int dy=-12;dy<=12;++dy)for(int dx=-12;dx<=12;++dx) {
+            const auto a=BWAPI::TilePosition(anchor);BWAPI::TilePosition t(a.x+dx,a.y+dy);
+            if(t.x<1 || t.y<1 || t.x+4>=game->mapWidth()-1 || t.y+3>=game->mapHeight()-1)continue;
+            const BWAPI::Position p(t.x*32+64,t.y*32+48);
+            std::vector<int> distances;for(auto m:minerals)if(m.getDistance(p)<370)distances.push_back((int)m.getDistance(p));
+            if(distances.size()<5)continue;std::sort(distances.begin(),distances.end());
+            if(distances[4]>335)continue;
+            bool blocked=false;
+            for(auto cc:me->getUnits())if(cc && cc->exists() && cc->getID()!=g_v66CCId &&
+                cc->getType()==type && cc->getDistance(p)<580)blocked=true;
+            for(auto start:game->getStartLocations())if(start!=me->getStartLocation() &&
+                BWAPI::Position(start).getDistance(p)<620)blocked=true;
+            for(const auto& rejected:g_v66RejectedBases)if(rejected.second>game->getFrameCount()) {
+                BWAPI::Position old((rejected.first%game->mapWidth())*32+64,
+                                    (rejected.first/game->mapWidth())*32+48);
+                if(old.getDistance(p)<420)blocked=true;
+            }
+            if(blocked || !AIV66SiteSafe(p) || !game->canBuildHere(t,type,nullptr,false))continue;
+            int score=(int)p.getDistance(home)*3;
+            for(int i=0;i<5;++i)score+=distances[i]*4;
+            if(score<bestScore){bestScore=score;best=t;}
+        }
+    }
+    return best;
+}
+
+static bool AIV66PadClear(BWAPI::TilePosition t,BWAPI::Unit builder) {
+    auto& game=BWAPI::Broodwar;auto me=game->self();const auto type=BWAPI::UnitTypes::Terran_Command_Center;
+    const BWAPI::Position p(t.x*32+64,t.y*32+48);
+    if(!t.isValid() || AIV35ForbiddenBuildPad(p,me->getStartLocation(),me,96) || !AIV66SiteSafe(p) ||
+       !game->canBuildHere(t,type,builder,true) || !builder->hasPath(p))return false;
+    for(auto u:me->getUnits())if(u && u->exists() &&
+        (u->getType()==BWAPI::UnitTypes::Terran_Barracks || u->getType()==BWAPI::UnitTypes::Terran_Factory)) {
+        const auto a=u->getTilePosition();const auto kind=u->getType();
+        if(t.x<a.x+kind.tileWidth()+(kind==BWAPI::UnitTypes::Terran_Factory?3:1) &&
+           t.x+4>a.x-1 && t.y<a.y+kind.tileHeight()+3 && t.y+3>a.y-1)return false;
+    }
+    return true;
+}
+
+static BWAPI::TilePosition AIV66MainPad(BWAPI::Unit builder) {
+    auto& game=BWAPI::Broodwar;auto me=game->self();const auto home=me->getStartLocation();
+    const auto type=BWAPI::UnitTypes::Terran_Command_Center;
+    auto planned=AIV12BuildingTile(type,builder);
+    if(planned.isValid() && BWAPI::Position(planned).getDistance(BWAPI::Position(home))<850 &&
+       AIV66PadClear(planned,builder))return planned;
+    BWAPI::TilePosition best=BWAPI::TilePositions::None;int score=10000000;
+    for(int dy=-22;dy<=22;++dy)for(int dx=-22;dx<=22;++dx) {
+        BWAPI::TilePosition t(home.x+dx,home.y+dy);BWAPI::Position p(t.x*32+64,t.y*32+48);
+        if(!AIV66PadClear(t,builder))continue;
+        const int cost=builder->getDistance(p);if(cost<score){score=cost;best=t;}
+    }
+    return best;
+}
+
+static BWAPI::Position AIV66AirWaypoint(BWAPI::Unit cc,BWAPI::Position goal) {
+    auto& game=BWAPI::Broodwar;const auto p=cc->getPosition();
+    BWAPI::Position best=BWAPI::Positions::None;int score=10000000;
+    const int dx[9]={0,1,1,0,-1,-1,-1,0,1},dy[9]={0,0,1,1,1,0,-1,-1,-1};
+    for(int k=0;k<9;++k) {
+        BWAPI::Position next=goal;
+        if(k)next=BWAPI::Position((std::max)(64,(std::min)(game->mapWidth()*32-64,p.x+dx[k]*256)),
+                                  (std::max)(64,(std::min)(game->mapHeight()*32-64,p.y+dy[k]*256)));
+        else if(p.getDistance(goal)>256) {
+            const int vx=goal.x-p.x,vy=goal.y-p.y,n=(std::max)(1,(std::max)(std::abs(vx),std::abs(vy)));
+            next=BWAPI::Position(p.x+vx*256/n,p.y+vy*256/n);
+        }
+        if(!AIV66SiteSafe(next,true))continue;
+        const int cost=(int)next.getDistance(goal);if(cost<score){score=cost;best=next;}
+    }
+    return best;
+}
+
+static void AIV66ExpansionDirector() {
+    auto& game=BWAPI::Broodwar;auto me=game->self();if(!me)return;
+    const int now=game->getFrameCount();
+    if(now<g_v66Previous) {
+        g_v66CCId=-1;g_v66Reserve=0;g_v66Staging=g_v66Remote=g_v66Returning=g_v66Activated=false;
+        g_v66WaitSince=g_v66Started=-1;g_v66Retry=0;g_v66Order=-10000;g_v66RejectedBases.clear();
+        g_v66Target=g_v66BuildPad=BWAPI::TilePositions::None;
+    }
+    g_v66Previous=now;
+    if(now%24 || AIV13OpponentRace()!=BWAPI::Races::Protoss)return;
+    auto c=AIV11Count();const auto type=BWAPI::UnitTypes::Terran_Command_Center;
+    BWAPI::Unit cc=nullptr;
+    for(auto u:me->getUnits())if(u && u->exists() && u->getType()==type &&
+        ((g_v66CCId>=0 && u->getID()==g_v66CCId) ||
+         (g_v66Staging && g_v66CCId<0 && g_v66BuildPad.isValid() && u->getTilePosition()==g_v66BuildPad)))cc=u;
+    if(cc && g_v66CCId<0){g_v66CCId=cc->getID();g_v66Reserve=0;g_v66Progress=now;g_v66Best=10000000;}
+    if(!g_v66Staging && !g_v66Activated && g_v66CCId<0) {
+        if(c.cc!=1 || c.scv<18 || c.factory<1 || c.tank<2 ||
+           AIV11PendingBuild(type,1080) || g_v55NaturalPrepared){g_v66WaitSince=-1;return;}
+        if(g_v66WaitSince<0)g_v66WaitSince=now;
+        if(now-g_v66WaitSince<720 || now<g_v66Retry)return;
+        auto site=AIV66AirSite();
+        if(!site.isValid()){g_v66Retry=now+720;AIV353Log("AIR_NO_SITE",type,nullptr,site);return;}
+        g_v66Target=site;g_v66Started=g_v66Progress=now;g_v66Staging=g_v66Remote=true;
+        g_v66Returning=false;g_v66BuildPad=BWAPI::TilePositions::None;g_v66Reserve=400;
+        AIV353Log("AIR_PLAN",type,nullptr,site,"ground_route_not_required;includes_mineral_only_sites");
+    }
+    if(g_v66CCId>=0 && !cc) {
+        AIV353Log("AIR_CC_LOST",type,nullptr,g_v66Target);g_v66CCId=-1;g_v66Reserve=0;
+        g_v66Staging=g_v66Remote=g_v66Activated=false;g_v66Retry=now+1200;g_v66WaitSince=-1;return;
+    }
+    if(g_v66Activated)return;
+    if(!g_v66Staging && g_v66CCId<0)return;
+    const BWAPI::Position goal(g_v66Target.x*32+64,g_v66Target.y*32+48);
+    int workers=0;
+    if(cc && cc->isCompleted() && !cc->isFlying())for(auto u:me->getUnits())if(u && u->exists() &&
+        u->isCompleted() && u->getType()==BWAPI::UnitTypes::Terran_SCV && u->getDistance(cc)<450 &&
+        (u->isGatheringMinerals() || u->isCarryingMinerals()) &&
+        AIV31DepotForPatch(AIV31PatchForWorker(u))==cc)++workers;
+    const bool at=cc && !cc->isFlying() && cc->getTilePosition()==g_v66Target;
+    if(at && g_v66Returning) {
+        g_v66Reserve=0;
+        if(now>=g_v66Retry) {
+            auto site=AIV66AirSite();g_v66Retry=now+720;
+            if(site.isValid()){g_v66Target=site;g_v66Returning=false;g_v66Progress=now;g_v66Best=10000000;}
+        }
+        return;
+    }
+    if(cc) {
+        const int distance=cc->getDistance(goal);
+        if(distance<g_v66Best-16){g_v66Best=distance;g_v66Progress=now;}
+    }
+    const bool safe=g_v66Returning || AIV66SiteSafe(goal);
+    const int action=AIV66FlightAction(cc!=nullptr,AIV11PendingBuild(type,1080),g_v66CCId>=0,
+        cc && cc->isCompleted(),cc && cc->isFlying(),at,cc && cc->getDistance(goal)<192,
+        safe,cc && cc->isFlying() && cc->canLand(g_v66Target),workers,
+        now-g_v66Started,now-g_v66Progress);
+    if(now%240==0)AIV353Log("AIR_STATE",type,cc,g_v66Target,
+        "action="+std::to_string(action)+";workers="+std::to_string(workers)+
+        ";flying="+std::to_string(cc && cc->isFlying()?1:0));
+    if(now-g_v66Order<72)return;
+    if(action==A66_BUILD) {
+        g_v66Reserve=400;if(me->minerals()<400)return;
+        auto builder=AIV11BuildWorker();if(!builder)return;
+        auto tile=AIV66MainPad(builder);
+        if(tile.isValid() && AIV11BuildNear(type,tile)) {
+            g_v66BuildPad=tile;g_v66Order=now;g_v66Started=now;AIV353Log("AIR_BUILD_HOME",type,builder,tile);
+        } else {
+            g_v66Reserve=0;g_v66Staging=false;g_v66Retry=now+480;
+            AIV353Log("AIR_NO_HOME_PAD",type,builder,tile);
+        }
+    } else if(action==A66_WAIT) {
+        if(cc && !cc->isCompleted() && !cc->getBuildUnit()) {
+            bool inbound=false;
+            for(auto u:me->getUnits())if(u && u->exists() && u->getType()==BWAPI::UnitTypes::Terran_SCV &&
+                u->getLastCommand().getTarget()==cc && now-u->getLastCommandFrame()<192)inbound=true;
+            auto worker=inbound?nullptr:AIV11BuildWorker(cc->getPosition());
+            if(worker && worker->rightClick(cc)){
+                g_v39BuilderUntil[worker->getID()]=now+1080;g_v66Order=now;
+                AIV353Log("AIR_RESUME",type,worker,cc->getTilePosition());
+            }
+        }
+    } else if(action==A66_LIFT) {
+        if(!cc->isTraining() && cc->lift()){g_v66Order=now;g_v66Progress=now;AIV353Log("AIR_LIFT",type,cc,g_v66Target);}
+    } else if(action==A66_MOVE) {
+        const auto next=AIV66AirWaypoint(cc,goal);
+        if(next.isValid() && cc->move(next))g_v66Order=now;
+    } else if(action==A66_LAND) {
+        if(cc->land(g_v66Target)){g_v66Order=now;AIV353Log("AIR_LAND",type,cc,g_v66Target);}
+    } else if(action==A66_SEED) {
+        g_v66Staging=false; // Mining may now associate this landed depot with its patches.
+        if(!cc->isTraining() && me->minerals()>=50 && game->canMake(BWAPI::UnitTypes::Terran_SCV,cc) &&
+           cc->train(BWAPI::UnitTypes::Terran_SCV)){g_v66Order=now;AIV353Log("AIR_SEED",type,cc,g_v66Target);}
+    } else if(action==A66_ACTIVE) {
+        g_v66Activated=true;g_v66Staging=false;g_v66Reserve=0;
+        AIV353Log("AIR_ACTIVE",type,cc,g_v66Target,"local_workers="+std::to_string(workers));
+    } else if(action==A66_REPLAN) {
+        if(g_v66Target.isValid())g_v66RejectedBases[g_v66Target.y*game->mapWidth()+g_v66Target.x]=now+3600;
+        if(!cc){g_v66Staging=false;g_v66Reserve=0;g_v66Retry=now+720;return;}
+        auto tile=AIV66AirSite();
+        if(!tile.isValid()) {
+            tile=g_v66BuildPad;g_v66Returning=true;g_v66Retry=now+720;
+            bool found=false;
+            if(cc->isFlying())for(int r=0;r<=10 && !found;++r)
+              for(int dy=-r;dy<=r && !found;++dy)for(int dx=-r;dx<=r;++dx) {
+                  BWAPI::TilePosition pad(g_v66BuildPad.x+dx,g_v66BuildPad.y+dy);
+                  if(cc->canLand(pad)){tile=pad;found=true;break;}
+            }
+        } else g_v66Returning=false;
+        g_v66Target=tile;g_v66Progress=now;g_v66Best=10000000;g_v66Order=now;
+        AIV353Log("AIR_REPLAN",type,cc,tile,g_v66Returning?"return_home_no_safe_site":"alternate_resource_base");
+    }
+}
+
 void AIV13EconomyDirector() {
     auto& game = BWAPI::Broodwar;
     auto me = game->self();
@@ -7007,7 +7248,7 @@ void AIV13EconomyDirector() {
                          c.factory>=(versusProtoss?2:1) && me->minerals()>=500;
     const bool fourthBase=c.cc==3 && c.completedCC==3 && c.scv>=44 &&
                           c.barracks>=(versusProtoss?1:4) && c.factory>=2 && me->minerals()>=600;
-    const bool tryExpand = (firstExpansion || thirdBase || fourthBase) &&
+    const bool tryExpand = !g_v66Staging && (firstExpansion || thirdBase || fourthBase) &&
                            !underAttack && frame >= g_v11NoExpansionUntil;
     // Do NOT freeze marines/tanks for a 400 mineral expansion.
     g_v11Reserve = tryExpand ? 350 : 0; // STARTCRAFT_AI_V46_CC_RESERVE
@@ -7086,7 +7327,7 @@ void StarterBot::onStart()
 {
     g_v353Tasks.clear();g_v353WatchPreviousFrame=-1;
     AIV353Log("START",BWAPI::UnitTypes::Terran_SCV,nullptr,BWAPI::TilePositions::None);
-    BWAPI::Broodwar->printf("AI v65: bounded Tank movement recovery");
+    BWAPI::Broodwar->printf("AI v66: alternate air expansion and matched windows");
     // Set our BWAPI options here    
 	BWAPI::Broodwar->setLocalSpeed(10);
     BWAPI::Broodwar->setFrameSkip(0);
@@ -7588,6 +7829,7 @@ static void AIV24TechDirector() {
     auto& game=BWAPI::Broodwar;
     auto me=game->self();
     if (!me || me->getRace()!=BWAPI::Races::Terran) return;
+    if(g_v66Reserve>0)return;
     const int frame=game->getFrameCount();
     if (frame<g_v24PreviousFrame) {
         g_v24LastTechOrder=-99999;g_v24LastCombatTick=-99999;
@@ -8943,6 +9185,7 @@ void StarterBot::onFrame()
     AIV31CorrectCargoDepot(); // STARTCRAFT_AI_V31
     AIV31WorkerFlowLog(); // STARTCRAFT_AI_V31
     AIV20MedicExitClearance(); // STARTCRAFT_AI_V20
+    AIV66ExpansionDirector(); // Alternative economy must not wait forever for natural siege posts.
 
     AIV16DetectionDirector(); // STARTCRAFT_AI_V16
     AIV22AcademyDirector(); // STARTCRAFT_AI_V22

@@ -75,3 +75,17 @@ results, so a failed compile cannot silently reuse an earlier summary.
 Use `compare_runs.py BASELINE_DIR CANDIDATE_DIR --output comparison.json` for
 paired comparisons. It requires the same adapter, runner, mobile-test hashes,
 seed, scenario count and timing bounds, and checks scenario input fields.
+
+v66 adds `run_air_expansion.py` and `air_runtime.cpp`. The parent executes the
+actual flight-decision function (14 checks per scenario) and full expansion
+director against scripted site choices, resource income, construction, flight,
+landing and worker association. Cases include successful seeding, rejected
+landing, temporary threats, CC loss, no safe alternative, lost original workers,
+low starting funds, refused lift, refused landing and a missing foundation.
+Expected director outcomes per 1,000 are 600 activated, 100 loss detections and
+300 blocked/preserved-main cases. These counts are distinct from policy pass
+counts and from any real match result. The seeded decision cases vary inputs;
+director cases use a deterministic ten-case suite with travel variation.
+Full map candidate search, perception, actual mining association, BWAPI command
+execution and Windows GUI behavior remain unrun. Source, runner and adapter
+hashes bind the receipts to their code.
