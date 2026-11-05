@@ -1,0 +1,1911 @@
+{
+  "reference_sha256": "00321f5a462d37969d4dc887b56f212cb3bc1df87d44fa4213fb14b969ab58d4",
+  "parser": "screp v1.13.8",
+  "frames": 18305,
+  "map": "\u0007KnockOut \u00051.4",
+  "terran": "SpeedTube`",
+  "protoss_quit_frame": 17673,
+  "build_requests": [
+    {
+      "Frame": 1315,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 8,
+        "Y": 13
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 2041,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 7,
+        "Y": 20
+      },
+      "Unit": {
+        "Name": "Barracks",
+        "ID": 111
+      }
+    },
+    {
+      "Frame": 2330,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 7,
+        "Y": 2
+      },
+      "Unit": {
+        "Name": "Refinery",
+        "ID": 110
+      }
+    },
+    {
+      "Frame": 3298,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 11,
+        "Y": 20
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 3528,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 9,
+        "Y": 15
+      },
+      "Unit": {
+        "Name": "Factory",
+        "ID": 113
+      }
+    },
+    {
+      "Frame": 4997,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 8,
+        "Y": 35
+      },
+      "Unit": {
+        "Name": "Command Center",
+        "ID": 106
+      }
+    },
+    {
+      "Frame": 5182,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 7,
+        "Y": 0
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 5350,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 14,
+        "Y": 34
+      },
+      "Unit": {
+        "Name": "Bunker",
+        "ID": 125
+      }
+    },
+    {
+      "Frame": 5523,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceAddon",
+        "ID": 36
+      },
+      "Pos": {
+        "X": 13,
+        "Y": 16
+      },
+      "Unit": {
+        "Name": "Machine Shop",
+        "ID": 120
+      }
+    },
+    {
+      "Frame": 6883,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 0,
+        "Y": 16
+      },
+      "Unit": {
+        "Name": "Factory",
+        "ID": 113
+      }
+    },
+    {
+      "Frame": 6888,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "IneffKind": 5,
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 0,
+        "Y": 16
+      },
+      "Unit": {
+        "Name": "Factory",
+        "ID": 113
+      }
+    },
+    {
+      "Frame": 7270,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 1,
+        "Y": 30
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 7845,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 11,
+        "Y": 7
+      },
+      "Unit": {
+        "Name": "Engineering Bay",
+        "ID": 122
+      }
+    },
+    {
+      "Frame": 8183,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 4,
+        "Y": 2
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 8416,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 8,
+        "Y": 41
+      },
+      "Unit": {
+        "Name": "Refinery",
+        "ID": 110
+      }
+    },
+    {
+      "Frame": 8497,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 1,
+        "Y": 32
+      },
+      "Unit": {
+        "Name": "Armory",
+        "ID": 123
+      }
+    },
+    {
+      "Frame": 8503,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "IneffKind": 5,
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 1,
+        "Y": 32
+      },
+      "Unit": {
+        "Name": "Armory",
+        "ID": 123
+      }
+    },
+    {
+      "Frame": 8507,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "IneffKind": 5,
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 1,
+        "Y": 32
+      },
+      "Unit": {
+        "Name": "Armory",
+        "ID": 123
+      }
+    },
+    {
+      "Frame": 8850,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceAddon",
+        "ID": 36
+      },
+      "Pos": {
+        "X": 4,
+        "Y": 17
+      },
+      "Unit": {
+        "Name": "Machine Shop",
+        "ID": 120
+      }
+    },
+    {
+      "Frame": 8924,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 4,
+        "Y": 42
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 9010,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 4,
+        "Y": 0
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 9088,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 4,
+        "Y": 42
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 9204,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 10,
+        "Y": 10
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 9208,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "IneffKind": 5,
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 10,
+        "Y": 10
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 9212,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "IneffKind": 5,
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 10,
+        "Y": 10
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 9490,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 1,
+        "Y": 2
+      },
+      "Unit": {
+        "Name": "Academy",
+        "ID": 112
+      }
+    },
+    {
+      "Frame": 9523,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 10,
+        "Y": 0
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 9816,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 11,
+        "Y": 2
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 10514,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 0,
+        "Y": 19
+      },
+      "Unit": {
+        "Name": "Factory",
+        "ID": 113
+      }
+    },
+    {
+      "Frame": 10533,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 0,
+        "Y": 22
+      },
+      "Unit": {
+        "Name": "Factory",
+        "ID": 113
+      }
+    },
+    {
+      "Frame": 10751,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 14,
+        "Y": 2
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 10766,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 13,
+        "Y": 0
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 10923,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceAddon",
+        "ID": 36
+      },
+      "Pos": {
+        "X": 12,
+        "Y": 36
+      },
+      "Unit": {
+        "Name": "ComSat",
+        "ID": 107
+      }
+    },
+    {
+      "Frame": 10972,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceAddon",
+        "ID": 36
+      },
+      "Pos": {
+        "X": 11,
+        "Y": 8
+      },
+      "Unit": {
+        "Name": "ComSat",
+        "ID": 107
+      }
+    },
+    {
+      "Frame": 11051,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 17,
+        "Y": 33
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 11057,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "IneffKind": 5,
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 17,
+        "Y": 33
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 11705,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 15,
+        "Y": 5
+      },
+      "Unit": {
+        "Name": "Starport",
+        "ID": 114
+      }
+    },
+    {
+      "Frame": 11780,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 28,
+        "Y": 36
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 12106,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 36,
+        "Y": 27
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 12111,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "IneffKind": 5,
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 36,
+        "Y": 27
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 12115,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "IneffKind": 5,
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 37,
+        "Y": 27
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 12246,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 16,
+        "Y": 0
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 12432,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 34,
+        "Y": 22
+      },
+      "Unit": {
+        "Name": "Command Center",
+        "ID": 106
+      }
+    },
+    {
+      "Frame": 12595,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 34,
+        "Y": 22
+      },
+      "Unit": {
+        "Name": "Command Center",
+        "ID": 106
+      }
+    },
+    {
+      "Frame": 12851,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 15,
+        "Y": 8
+      },
+      "Unit": {
+        "Name": "Science Facility",
+        "ID": 116
+      }
+    },
+    {
+      "Frame": 12874,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 4,
+        "Y": 32
+      },
+      "Unit": {
+        "Name": "Armory",
+        "ID": 123
+      }
+    },
+    {
+      "Frame": 12957,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceAddon",
+        "ID": 36
+      },
+      "Pos": {
+        "X": 20,
+        "Y": 6
+      },
+      "Unit": {
+        "Name": "Control Tower",
+        "ID": 115
+      }
+    },
+    {
+      "Frame": 12965,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "IneffKind": 5,
+      "Order": {
+        "Name": "PlaceAddon",
+        "ID": 36
+      },
+      "Pos": {
+        "X": 19,
+        "Y": 6
+      },
+      "Unit": {
+        "Name": "Control Tower",
+        "ID": 115
+      }
+    },
+    {
+      "Frame": 13006,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 34,
+        "Y": 27
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 13239,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 17,
+        "Y": 2
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 13472,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 16,
+        "Y": 15
+      },
+      "Unit": {
+        "Name": "Factory",
+        "ID": 113
+      }
+    },
+    {
+      "Frame": 13519,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 16,
+        "Y": 18
+      },
+      "Unit": {
+        "Name": "Factory",
+        "ID": 113
+      }
+    },
+    {
+      "Frame": 13635,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 16,
+        "Y": 15
+      },
+      "Unit": {
+        "Name": "Factory",
+        "ID": 113
+      }
+    },
+    {
+      "Frame": 13898,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 19,
+        "Y": 0
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 13937,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 20,
+        "Y": 2
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 14460,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceAddon",
+        "ID": 36
+      },
+      "Pos": {
+        "X": 38,
+        "Y": 23
+      },
+      "Unit": {
+        "Name": "ComSat",
+        "ID": 107
+      }
+    },
+    {
+      "Frame": 14504,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 40,
+        "Y": 7
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 14510,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "IneffKind": 5,
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 40,
+        "Y": 7
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 14515,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "IneffKind": 5,
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 40,
+        "Y": 7
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 14837,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 19,
+        "Y": 4
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 14875,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 22,
+        "Y": 0
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 14972,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 6,
+        "Y": 42
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 15153,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 17,
+        "Y": 12
+      },
+      "Unit": {
+        "Name": "Factory",
+        "ID": 113
+      }
+    },
+    {
+      "Frame": 15161,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "IneffKind": 5,
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 16,
+        "Y": 12
+      },
+      "Unit": {
+        "Name": "Factory",
+        "ID": 113
+      }
+    },
+    {
+      "Frame": 15324,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 7,
+        "Y": 20
+      },
+      "Unit": {
+        "Name": "Factory",
+        "ID": 113
+      }
+    },
+    {
+      "Frame": 15818,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 22,
+        "Y": 4
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 15833,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 25,
+        "Y": 0
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 15921,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 40,
+        "Y": 9
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 15926,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "IneffKind": 5,
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 40,
+        "Y": 9
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 15961,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 30,
+        "Y": 8
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 16006,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 6,
+        "Y": 40
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 16065,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 2,
+        "Y": 41
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 16549,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 25,
+        "Y": 4
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 16577,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 23,
+        "Y": 2
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 16643,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 30,
+        "Y": 4
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 16676,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 36,
+        "Y": 6
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 16833,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 12,
+        "Y": 42
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 17689,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 38,
+        "Y": 25
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    },
+    {
+      "Frame": 17800,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 14,
+        "Y": 21
+      },
+      "Unit": {
+        "Name": "Factory",
+        "ID": 113
+      }
+    },
+    {
+      "Frame": 17806,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "IneffKind": 5,
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 14,
+        "Y": 21
+      },
+      "Unit": {
+        "Name": "Factory",
+        "ID": 113
+      }
+    },
+    {
+      "Frame": 17822,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "IneffKind": 5,
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 14,
+        "Y": 21
+      },
+      "Unit": {
+        "Name": "Factory",
+        "ID": 113
+      }
+    },
+    {
+      "Frame": 17827,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "IneffKind": 5,
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 14,
+        "Y": 21
+      },
+      "Unit": {
+        "Name": "Factory",
+        "ID": 113
+      }
+    },
+    {
+      "Frame": 17928,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 26,
+        "Y": 2
+      },
+      "Unit": {
+        "Name": "Supply Depot",
+        "ID": 109
+      }
+    },
+    {
+      "Frame": 18018,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 62,
+        "Y": 6
+      },
+      "Unit": {
+        "Name": "Command Center",
+        "ID": 106
+      }
+    },
+    {
+      "Frame": 18049,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Build",
+        "ID": 12
+      },
+      "Order": {
+        "Name": "PlaceBuilding",
+        "ID": 30
+      },
+      "Pos": {
+        "X": 38,
+        "Y": 7
+      },
+      "Unit": {
+        "Name": "Missile Turret",
+        "ID": 124
+      }
+    }
+  ],
+  "research_requests": [
+    {
+      "Frame": 6161,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Tech",
+        "ID": 48
+      },
+      "Tech": {
+        "Name": "Spider Mines",
+        "ID": 3
+      }
+    },
+    {
+      "Frame": 9334,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Tech",
+        "ID": 48
+      },
+      "Tech": {
+        "Name": "Tank Siege Mode",
+        "ID": 5
+      }
+    }
+  ],
+  "upgrade_requests": [
+    {
+      "Frame": 7551,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Upgrade",
+        "ID": 50
+      },
+      "Upgrade": {
+        "Name": "Ion Thrusters (Vulture Speed)",
+        "ID": 17
+      }
+    },
+    {
+      "Frame": 9741,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Upgrade",
+        "ID": 50
+      },
+      "Upgrade": {
+        "Name": "Terran Vehicle Weapons",
+        "ID": 8
+      }
+    },
+    {
+      "Frame": 13962,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Upgrade",
+        "ID": 50
+      },
+      "Upgrade": {
+        "Name": "Terran Vehicle Weapons",
+        "ID": 8
+      }
+    },
+    {
+      "Frame": 14362,
+      "PlayerID": 0,
+      "Type": {
+        "Name": "Upgrade",
+        "ID": 50
+      },
+      "Upgrade": {
+        "Name": "Terran Vehicle Plating",
+        "ID": 1
+      }
+    }
+  ],
+  "unit_train_request_frames": {
+    "Marine": [
+      3270,
+      3963,
+      4292
+    ],
+    "Vulture": [
+      4771,
+      6155,
+      6600,
+      8129,
+      11959,
+      11966,
+      12746,
+      12760,
+      14030,
+      14034,
+      14043,
+      14057,
+      14069,
+      14072,
+      14075,
+      14079,
+      14083,
+      14086,
+      14089,
+      14156,
+      15066,
+      15070,
+      15074,
+      15078,
+      15466,
+      15470,
+      15474,
+      15477,
+      15770,
+      15774,
+      15778,
+      15782,
+      15793,
+      16400,
+      16404,
+      16407,
+      16417,
+      17072,
+      17321,
+      17325,
+      17328,
+      17333,
+      17337,
+      17341,
+      17345,
+      17349,
+      17353,
+      17356,
+      17753,
+      17757,
+      17761,
+      17772,
+      17776,
+      17780,
+      18131,
+      18135,
+      18139,
+      18155,
+      18159,
+      18162
+    ],
+    "Siege Tank (Tank Mode)": [
+      7117,
+      7138,
+      7142,
+      7966,
+      8708,
+      10090,
+      10096,
+      11327,
+      11333,
+      12521,
+      12527,
+      13687,
+      13694,
+      13728,
+      13753,
+      14792,
+      14799,
+      15971,
+      15977,
+      17060,
+      17066,
+      17861,
+      17867
+    ],
+    "Dropship": [
+      13876,
+      13879,
+      13882,
+      13885,
+      13920
+    ],
+    "Science Vessel": [
+      16498
+    ]
+  },
+  "limitations": [
+    "Command requests are not completed unit counts; repeated human queue clicks are retained.",
+    "KnockOut Top vs Bottom vs human is different from the current Destination Melee Pluto arena.",
+    "Real engine play and exact timings/outcomes are not reproduced."
+  ]
+}
